@@ -18,6 +18,8 @@ public class GamificationDbContext : DbContext
     public DbSet<Achievement> Achievements { get; set; }
     public DbSet<UserAchievement> UserAchievements { get; set; }
     public DbSet<ActivityFeed> ActivityFeeds { get; set; }
+    public DbSet<MysteryBox> MysteryBoxes { get; set; }
+    public DbSet<MysteryBoxOpening> MysteryBoxOpenings { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -116,6 +118,28 @@ public class GamificationDbContext : DbContext
             entity.HasIndex(e => e.CreatedAt);
             entity.HasIndex(e => e.Type);
             entity.HasIndex(e => e.UserId);
+        });
+
+        // MysteryBox configuration
+        modelBuilder.Entity<MysteryBox>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => e.BoxId).IsUnique();
+            entity.Property(e => e.Price).HasColumnType("decimal(18,2)");
+        });
+
+        // MysteryBoxOpening configuration
+        modelBuilder.Entity<MysteryBoxOpening>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => e.UserId);
+            entity.HasIndex(e => e.OpenedAt);
+            entity.Property(e => e.FlogSpent).HasColumnType("decimal(18,2)");
+            entity.Property(e => e.FlogReceived).HasColumnType("decimal(18,2)");
+
+            entity.HasOne(e => e.MysteryBox)
+                .WithMany()
+                .HasForeignKey(e => e.MysteryBoxId);
         });
     }
 }

@@ -23,6 +23,7 @@ builder.Services.AddScoped<UserGamificationService>();
 builder.Services.AddScoped<QuestService>();
 builder.Services.AddScoped<AchievementService>();
 builder.Services.AddScoped<ActivityFeedService>();
+builder.Services.AddScoped<MysteryBoxService>();
 
 // MassTransit configuration
 builder.Services.AddMassTransit(x =>
@@ -80,6 +81,10 @@ try
     // Seed achievements
     var achievementService = scope.ServiceProvider.GetRequiredService<AchievementService>();
     await achievementService.SeedAchievementsAsync();
+
+    // Seed mystery boxes
+    var mysteryBoxService = scope.ServiceProvider.GetRequiredService<MysteryBoxService>();
+    await mysteryBoxService.SeedMysteryBoxesAsync();
 }
 catch (Exception ex)
 {
