@@ -139,4 +139,21 @@ export const gamificationService = {
     if (!res.ok) throw new Error('Failed to fetch user activity');
     return res.json();
   },
+
+  // Mystery box endpoints
+  async getAllMysteryBoxes() {
+    const res = await fetch(`${BASE_URL}/api/mysteryboxes`);
+    if (!res.ok) throw new Error('Failed to fetch mystery boxes');
+    return res.json();
+  },
+
+  async openBox(userId: string, boxId: string) {
+    const res = await fetch(`${BASE_URL}/api/mysteryboxes/${userId}/open`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ boxId }),
+    });
+    if (!res.ok) throw new Error('Failed to open mystery box');
+    return res.json();
+  },
 };
