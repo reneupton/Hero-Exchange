@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Logging;
+using Microsoft.Extensions.Primitives;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -31,6 +32,25 @@ IdentityModelEventSource.ShowPII = true;
 
 
 var app = builder.Build();
+
+// Admin token guard for /admin routes
+app.Use(async (context, next) =>
+{
+    if (context.Request.Path.StartsWithSegments("/admin", StringComparison.OrdinalIgnoreCase))
+    {
+        var configured = builder.Configuration["AdminToken"];
+        if (string.IsNullOrEmpty(configured) ||
+            !context.Request.Headers.TryGetValue("X-Admin-Token", out StringValues provided) ||
+            !StringValues.Equals(configured, provided, StringComparison.Ordinal))
+        {
+            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+            await context.Response.WriteAsync("Admin token missing or invalid");
+            return;
+        }
+    }
+
+    await next();
+});
 
 app.UseCors();
 
