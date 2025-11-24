@@ -19,7 +19,7 @@ public class ProgressService
             ID = username,
             Username = username,
             AvatarUrl =
-                $"https://api.dicebear.com/7.x/thumbs/svg?seed={username}&backgroundType=gradientLinear&radius=40",
+                $"https://api.dicebear.com/7.x/thumbs/png?seed={username}&backgroundType=gradientLinear&radius=40",
             FlogBalance = 500,
             Experience = 0,
             Level = 1,

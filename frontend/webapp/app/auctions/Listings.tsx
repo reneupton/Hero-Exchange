@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import AuctionCard from "./AuctionCard";
 import { Auction, PagedResult } from "@/types";
 import AppPagination from "../components/AppPagination";
@@ -17,8 +17,8 @@ import { useProfileStore } from "@/hooks/useProfileStore";
 import Link from "next/link";
 import Image from "next/image";
 import { numberWithCommas } from "../lib/numberWithComma";
-import { openMysteryBox } from "../actions/gamificationActions";
-
+import { getLeaderboard, getMyProgress, openMysteryBox } from "../actions/gamificationActions";
+import { usePathname, useRouter } from "next/navigation";
 
 type Props = {
   user: User | null;
@@ -27,9 +27,12 @@ type Props = {
 export default function Listings({ user }: Props) {
   const [loading, setLoading] = useState(true);
   const [reward, setReward] = useState<{xp: number; coins: number} | null>(null);
+  const pathname = usePathname();
+  const router = useRouter();
   const profile = useProfileStore((state) => state.profile);
   const leaderboard = useProfileStore((state) => state.leaderboard);
   const setProfile = useProfileStore((state) => state.setProfile);
+  const setLeaderboard = useProfileStore((state) => state.setLeaderboard);
   const progressPct = profile
     ? Math.min(
         100,
@@ -76,6 +79,23 @@ export default function Listings({ user }: Props) {
   const setParams = useParamStore((state) => state.setParams);
   const url = qs.stringifyUrl({ url: "", query: params });
 
+  const refreshProfileAndBoard = useCallback(async (): Promise<void> => {
+    if (!user) return;
+    try {
+      const profile = await getMyProgress();
+      setProfile(profile ?? undefined);
+      const leaderboard = await getLeaderboard();
+      setLeaderboard(leaderboard);
+    } catch {
+      // ignore errors; keep current state
+    }
+  }, [user, setProfile, setLeaderboard]);
+
+  const ensureDicebearPng = (url: string) =>
+    url.includes("dicebear.com")
+      ? url.replace("/svg", "/png")
+      : url;
+
   function setWinner(){
     if(!user?.username) return;
     setParams({winner: user.username, seller: undefined, filterBy: 'finished'})
@@ -108,6 +128,34 @@ export default function Listings({ user }: Props) {
     });
   }, [url, setData]);
 
+  useEffect(() => {
+    refreshProfileAndBoard();
+    if (!user) return;
+    const onFocus = () => refreshProfileAndBoard();
+    const onPageShow = () => refreshProfileAndBoard();
+    const onVisibility = () => {
+      if (document.visibilityState === "visible") refreshProfileAndBoard();
+    };
+    window.addEventListener("focus", onFocus);
+    window.addEventListener("pageshow", onPageShow);
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => {
+      window.removeEventListener("focus", onFocus);
+      window.removeEventListener("pageshow", onPageShow);
+      document.removeEventListener("visibilitychange", onVisibility);
+    };
+  }, [user, refreshProfileAndBoard]);
+
+  // Also refresh when the route changes back to listings (Next.js client-side back)
+  useEffect(() => {
+    refreshProfileAndBoard();
+    const nav = performance.getEntriesByType("navigation")[0] as PerformanceNavigationTiming | undefined;
+    if (nav?.type === "back_forward") {
+      router.refresh();
+      refreshProfileAndBoard();
+    }
+  }, [pathname, refreshProfileAndBoard, router]);
+
   if (loading) return <h3>Loading ...</h3>;
 
   if(isMobile) return <h3> This website is not supported for mobile devices. Please use a desktop to preview this demo. You will be able to still see activity notifications. </h3>
@@ -122,7 +170,10 @@ export default function Listings({ user }: Props) {
               <div className="relative h-14 w-14">
                 <div className="h-full w-full rounded-2xl overflow-hidden border border-white/70 shadow-lg bg-gradient-to-br from-[#5b7bff] to-[#9f7aea]" />
                 <Image
-                  src={profile?.avatarUrl ?? `https://api.dicebear.com/7.x/thumbs/svg?seed=${user.username}`}
+                  src={ensureDicebearPng(
+                    profile?.avatarUrl ??
+                      `https://api.dicebear.com/7.x/thumbs/png?seed=${user.username}&backgroundType=gradientLinear&radius=40`
+                  )}
                   alt="avatar"
                   fill
                   className="rounded-2xl object-cover"
@@ -267,7 +318,7 @@ export default function Listings({ user }: Props) {
                     </span>
                     <div className="relative h-8 w-8">
                       <Image
-                        src={entry.avatarUrl}
+                        src={ensureDicebearPng(entry.avatarUrl)}
                         alt={entry.username}
                         fill
                         className="rounded-full border border-white/70 shadow object-cover"

@@ -46,7 +46,7 @@ public class DbInitialiser
                 Colorway = "Midnight",
                 ReleaseYear = 2023,
                 Specs = "2560x1440 | 170Hz | 1ms | HDR400",
-                ImageUrl = "https://images.unsplash.com/photo-1587202372775-98973d03e1c0?auto=format&fit=crop&w=1200&q=80"
+                ImageUrl = "https://images.unsplash.com/photo-1580894732444-8ecded7900cd?auto=format&fit=crop&w=1200&q=80"
             },
             new Item
             {
@@ -106,7 +106,7 @@ public class DbInitialiser
                 Colorway = "Shadow Black",
                 ReleaseYear = 2023,
                 Specs = "3440x1440 | 144Hz | 1ms | HDR10",
-                ImageUrl = "https://images.unsplash.com/photo-1527443224154-d7fb2c9cc0c6?auto=format&fit=crop&w=1200&q=80"
+                ImageUrl = "https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?auto=format&fit=crop&w=1200&q=80"
             },
             new Item
             {
