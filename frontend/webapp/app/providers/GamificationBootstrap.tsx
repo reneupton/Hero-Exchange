@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { User } from "next-auth";
 import toast from "react-hot-toast";
+import { usePathname } from "next/navigation";
 import { getLeaderboard, getMyProgress, awardGamification } from "../actions/gamificationActions";
 import { useProfileStore } from "@/hooks/useProfileStore";
 
@@ -12,6 +13,7 @@ type Props = {
 };
 
 export default function GamificationBootstrap({ user, children }: Props) {
+  const pathname = usePathname();
   const setProfile = useProfileStore((state) => state.setProfile);
   const setLeaderboard = useProfileStore((state) => state.setLeaderboard);
 
@@ -46,7 +48,7 @@ export default function GamificationBootstrap({ user, children }: Props) {
     return () => {
       ignore = true;
     };
-  }, [user, setProfile, setLeaderboard]);
+  }, [user, pathname, setProfile, setLeaderboard]);
 
   return <>{children}</>;
 }
