@@ -21,6 +21,9 @@ builder.Services.AddCors(options => {
     options.AddPolicy("customPolicy", b => {
         b.AllowAnyHeader().AllowAnyMethod().AllowCredentials().WithOrigins(builder.Configuration["ClientApp"]);
     });
+    options.AddPolicy("adminPolicy", b => {
+        b.AllowAnyHeader().AllowAnyMethod().WithOrigins(builder.Configuration["AdminApp"] ?? "http://localhost:4200");
+    });
 });
 
 builder.Services.AddAuthorization(options =>
