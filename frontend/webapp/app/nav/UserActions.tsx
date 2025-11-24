@@ -21,6 +21,11 @@ export default function UserActions({user} : Props) {
   const setParams = useParamStore(state => state.setParams);
   const profile = useProfileStore((state) => state.profile);
 
+  const ensureDicebearPng = (url: string) =>
+    url.includes("dicebear.com")
+      ? url.replace("/svg", "/png")
+      : url;
+
   function setWinner(){
     setParams({winner: user.username, seller: undefined, filterBy: 'finished'})
     if(pathname != '/') router.push('/')
@@ -31,7 +36,10 @@ export default function UserActions({user} : Props) {
     if(pathname != '/') router.push('/')
   }
 
-  const avatar = profile?.avatarUrl ?? `https://api.dicebear.com/7.x/thumbs/svg?seed=${user.username}`;
+  const avatar = ensureDicebearPng(
+    profile?.avatarUrl ??
+      `https://api.dicebear.com/7.x/thumbs/png?seed=${user.username}&backgroundType=gradientLinear&radius=40`
+  );
 
   const label = (
     <div className="flex items-center gap-3 bg-white/70 px-3 py-2 rounded-full border border-white/70 shadow-md">

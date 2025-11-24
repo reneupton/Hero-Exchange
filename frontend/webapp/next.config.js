@@ -8,7 +8,8 @@ const nextConfig = {
             'cdn.pixabay.com',
             'people.com',
             'res.cloudinary.com',
-            'images.unsplash.com'
+            'images.unsplash.com',
+            'api.dicebear.com'
         ]
     }, output: 'standalone'
 }
