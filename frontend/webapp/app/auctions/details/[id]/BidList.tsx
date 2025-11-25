@@ -23,7 +23,8 @@ export default function BidList({ user, auction }: Props) {
   const setBids = useBidStore((state) => state.setBids);
   const open = useBidStore((state) => state.open);
   const setOpen = useBidStore((state) => state.setOpen);
-  const openForBids = new Date(auction.auctionEnd) > new Date();
+  const isLive = auction.status?.toLowerCase() === "live";
+  const openForBids = isLive && new Date(auction.auctionEnd) > new Date();
 
   const highBid = bids.reduce(
     (prev, current) =>
