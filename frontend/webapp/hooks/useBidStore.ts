@@ -14,7 +14,7 @@ type Actions = {
 
 export const useBidStore = create<State & Actions>((set) => ({
     bids: [],
-    open: true,
+    open: false,
 
     setBids: (bids: Bid[]) => {
         set(() => ({

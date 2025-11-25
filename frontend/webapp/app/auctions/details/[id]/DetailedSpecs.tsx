@@ -1,5 +1,6 @@
 'use client';
 
+import {useEffect} from "react";
 import {Auction} from "@/types";
 import {Table} from "flowbite-react";
 import { useRouter } from "next/navigation";
@@ -10,9 +11,12 @@ type Props = {
 }
 export default function DetailedSpecs({auction}: Props) {
     const router = useRouter();
-    if(auction === undefined || auction == null || auction['id'] == null) {
-        router.push('/');
-    }
+    useEffect(() => {
+        if (!auction || !auction.id) {
+            router.push('/');
+        }
+    }, [auction, router]);
+    if (!auction || !auction.id) return null;
     
     return (
         <div className="glass-panel rounded-2xl overflow-hidden border border-white/70">
