@@ -128,6 +128,23 @@ services:
       - rabbitmq 
     networks:
       custom: 
+  bot-admin:
+    build:
+      context: .
+      dockerfile: py-bots/dockerfile
+    image: flogit-bot-admin:latest
+    environment:
+      - API_BASE=http://gateway-svc/
+      - IDENTITY_URL=http://identity-svc/
+      - BOT_USERS=alice,bob
+      - BOT_PASSWORD=Pass123$
+    depends_on:
+      - gateway-svc
+      - identity-svc
+    ports:
+      - 8000:8000
+    networks:
+      custom:
   py-svc:
     image: dionupton/py-svc:latest
     volumes:

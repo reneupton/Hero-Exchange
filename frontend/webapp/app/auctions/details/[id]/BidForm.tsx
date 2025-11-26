@@ -36,7 +36,9 @@ export default function BidForm({ auctionId, highBid }: Props) {
         reset();
         return awardGamification("bid").then((profile) => profile ?? getMyProgress());
       })
-      .then((profile) => setProfile(profile ?? undefined))
+      .then((profile) => {
+        if (profile) setProfile(profile);
+      })
       .catch((err) => toast.error(err.message));
   }
 

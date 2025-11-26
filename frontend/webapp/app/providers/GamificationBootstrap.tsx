@@ -29,13 +29,13 @@ export default function GamificationBootstrap({ user, children }: Props) {
 
       try {
         const profile = await getMyProgress();
-        if (!ignore) setProfile(profile ?? undefined);
+        if (!ignore && profile) setProfile(profile);
 
         const daily = await awardGamification("daily-login");
         if (!ignore && daily) setProfile(daily);
 
         const leaderboard = await getLeaderboard();
-        if (!ignore) setLeaderboard(leaderboard);
+        if (!ignore && leaderboard) setLeaderboard(leaderboard);
       } catch (error: any) {
         if (!ignore) {
           toast.error(error?.message ?? "Unable to sync profile");

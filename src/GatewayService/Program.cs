@@ -44,7 +44,7 @@ app.Use(async (context, next) =>
         var configured = builder.Configuration["AdminToken"];
         if (string.IsNullOrEmpty(configured) ||
             !context.Request.Headers.TryGetValue("X-Admin-Token", out StringValues provided) ||
-            !StringValues.Equals(configured, provided, StringComparison.Ordinal))
+            !provided.Any(p => string.Equals(p, configured, StringComparison.Ordinal)))
         {
             context.Response.StatusCode = StatusCodes.Status401Unauthorized;
             await context.Response.WriteAsync("Admin token missing or invalid");

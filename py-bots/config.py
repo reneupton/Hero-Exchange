@@ -6,8 +6,9 @@ class Settings(BaseSettings):
     api_base: AnyHttpUrl = "http://localhost:6001/"
     identity_url: Optional[AnyHttpUrl] = "http://localhost:5000/"
 
-    bot_users: str = "bot1,bot2"
-    bot_password: str = "password"
+    # Default to seeded Identity users to avoid invalid_grant errors
+    bot_users: str = "alice,bob"
+    bot_password: str = "Pass123$"
 
     bid_rate_per_min: int = 4
     create_rate_per_min: int = 1

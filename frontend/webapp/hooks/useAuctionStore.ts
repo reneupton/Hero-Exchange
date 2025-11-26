@@ -10,6 +10,7 @@ type State = {
 type Actions = {
     setData: (data: PagedResult<Auction>) => void
     setCurrentPrice: (auctionId: string, amount: number) => void
+    setStatus: (auctionId: string, status: string) => void
 }
 
 const initialState: State = {
@@ -33,6 +34,13 @@ export const useAuctionStore = create<State & Actions>((set) => ({
         set((state) => ({
             auctions: state.auctions.map((auction) => auction.id === auctionId 
             ? {...auction, currentHighBid: amount} : auction)
+        }))
+    },
+
+    setStatus: (auctionId: string, status: string) => {
+        set((state) => ({
+            auctions: state.auctions.map((auction) => auction.id === auctionId
+            ? { ...auction, status } : auction)
         }))
     }
 }))
