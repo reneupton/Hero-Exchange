@@ -2,7 +2,7 @@ import asyncio
 import random
 import time
 from dataclasses import dataclass
-from typing import Dict, List, Optional
+from typing import Callable, Dict, List, Optional
 
 import httpx
 from tenacity import retry, stop_after_attempt, wait_fixed
@@ -56,11 +56,19 @@ class BotStats:
 
 
 class AuctionBot:
-    def __init__(self, username: str, password: str, settings: Settings, client: httpx.AsyncClient):
+    def __init__(
+        self,
+        username: str,
+        password: str,
+        settings: Settings,
+        client: httpx.AsyncClient,
+        log_fn: Optional[Callable[[str, str, Dict], None]] = None,
+    ):
         self.username = username
         self.password = password
         self.settings = settings
         self.client = client
+        self.log_fn = log_fn
         self.token: Optional[str] = None
         self.token_expires_at: float = 0
         self.stats = BotStats()
@@ -112,6 +120,8 @@ class AuctionBot:
         if balance < self.settings.min_balance:
             delta = self.settings.min_balance - balance
             await self.award("admin-topup", delta)
+            if self.log_fn:
+                self.log_fn(self.username, "topup", {"delta": delta})
 
     async def award(self, action: str, amount: Optional[int] = None):
         payload = {"action": action}
@@ -147,9 +157,13 @@ class AuctionBot:
         if resp.is_success:
             self.last_mystery = now
             self.stats.mysteries_opened += 1
+            if self.log_fn:
+                self.log_fn(self.username, "mystery", {})
 
     async def list_live_auctions(self) -> List[Dict]:
-        resp = await self.client.get(self.settings.api_base + "auctions?filter=live&pageSize=10", headers=self.auth_headers())
+        resp = await self.client.get(
+            self.settings.api_base + "auctions?filter=live&pageSize=10", headers=self.auth_headers()
+        )
         resp.raise_for_status()
         data = resp.json()
         return data.get("results", []) if isinstance(data, dict) else []
@@ -158,21 +172,31 @@ class AuctionBot:
         if len(self.active_auctions) >= self.settings.max_active_auctions_per_bot:
             return
         item = random.choice(ITEM_CATALOG)
-        end_date = (time.time() + 3600 * 24)  # 24h from now
+        end_date = time.time() + 3600 * 24  # 24h from now
         payload = {
-          **item,
-          "reservePrice": random.randint(300, 1500),
-          "auctionEnd": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(end_date))
+            **item,
+            "reservePrice": random.randint(300, 1500),
+            "auctionEnd": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(end_date)),
         }
-        resp = await self.client.post(self.settings.api_base + "auctions", json=payload, headers=self.auth_headers())
+        resp = await self.client.post(
+            self.settings.api_base + "auctions", json=payload, headers=self.auth_headers()
+        )
         if resp.status_code == 401:
             await self.login()
-            resp = await self.client.post(self.settings.api_base + "auctions", json=payload, headers=self.auth_headers())
+            resp = await self.client.post(
+                self.settings.api_base + "auctions", json=payload, headers=self.auth_headers()
+            )
         if resp.is_success:
             auction = resp.json()
             if isinstance(auction, dict) and auction.get("id"):
                 self.active_auctions.append(auction["id"])
                 self.stats.auctions_created += 1
+                if self.log_fn:
+                    self.log_fn(
+                        self.username,
+                        "create-auction",
+                        {"id": auction["id"], "title": item["title"]},
+                    )
 
     async def place_bid(self, auction: Dict):
         auction_id = auction.get("id")
@@ -193,28 +217,26 @@ class AuctionBot:
             )
         if resp.is_success:
             self.stats.bids_placed += 1
+            if self.log_fn:
+                self.log_fn(self.username, "bid", {"auctionId": auction_id, "amount": next_bid})
         else:
             self.stats.failures += 1
             self.stats.last_error = resp.text
 
     async def tick(self):
-        # Login if needed
         await self.ensure_token()
 
         await self.top_up_if_needed()
 
-        # Daily login award (once per day)
         if time.time() - self.last_daily > self.settings.daily_interval_hours * 3600:
             await self.award("daily-login")
             self.last_daily = time.time()
 
         await self.open_mystery()
 
-        # Create auctions (throttled)
         if random.random() < (self.settings.create_rate_per_min / 60):
             await self.create_auction()
 
-        # Bid on live auctions (throttled)
         if random.random() < (self.settings.bid_rate_per_min / 60):
             auctions = await self.list_live_auctions()
             random.shuffle(auctions)

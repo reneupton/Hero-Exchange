@@ -3,6 +3,8 @@ using AuctionService.DTOs;
 using AuctionService.Entities;
 using AutoMapper;
 using AutoMapper.QueryableExtensions;
+using Contracts;
+using MassTransit;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -14,11 +16,13 @@ namespace AuctionService.Controllers
     {
         private readonly AuctionDbContext _context;
         private readonly IMapper _mapper;
+        private readonly IPublishEndpoint _publishEndpoint;
 
-        public AdminAuctionsController(AuctionDbContext context, IMapper mapper)
+        public AdminAuctionsController(AuctionDbContext context, IMapper mapper, IPublishEndpoint publishEndpoint)
         {
             _context = context;
             _mapper = mapper;
+            _publishEndpoint = publishEndpoint;
         }
 
         [HttpGet]
@@ -68,11 +72,25 @@ namespace AuctionService.Controllers
             if (!string.IsNullOrWhiteSpace(dto.ImageUrl)) auction.Item.ImageUrl = dto.ImageUrl;
             if (dto.ReservePrice.HasValue) auction.ReservePrice = dto.ReservePrice.Value;
             if (dto.AuctionEnd.HasValue) auction.AuctionEnd = dto.AuctionEnd.Value;
-            if (dto.Status.HasValue) auction.Status = dto.Status.Value;
+            var statusChanged = false;
+            if (dto.Status.HasValue && auction.Status != dto.Status.Value)
+            {
+                auction.Status = dto.Status.Value;
+                statusChanged = true;
+            }
 
             await _context.SaveChangesAsync();
 
             var result = _mapper.Map<AuctionDto>(auction);
+            if (statusChanged)
+            {
+                await _publishEndpoint.Publish(new Contracts.AuctionStatusChanged
+                {
+                    AuctionId = auction.Id.ToString(),
+                    Status = auction.Status.ToString(),
+                    ChangedBy = "admin"
+                });
+            }
             return Ok(result);
         }
 
@@ -83,6 +101,12 @@ namespace AuctionService.Controllers
             if (auction == null) return NotFound();
             auction.Status = Status.Finished;
             await _context.SaveChangesAsync();
+            await _publishEndpoint.Publish(new Contracts.AuctionStatusChanged
+            {
+                AuctionId = auction.Id.ToString(),
+                Status = auction.Status.ToString(),
+                ChangedBy = "admin"
+            });
             return NoContent();
         }
 
@@ -93,6 +117,12 @@ namespace AuctionService.Controllers
             if (auction == null) return NotFound();
             auction.Status = Status.ReserveNotMet;
             await _context.SaveChangesAsync();
+            await _publishEndpoint.Publish(new Contracts.AuctionStatusChanged
+            {
+                AuctionId = auction.Id.ToString(),
+                Status = auction.Status.ToString(),
+                ChangedBy = "admin"
+            });
             return NoContent();
         }
     }

@@ -32,7 +32,9 @@ builder.Services.AddSignalR();
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("CorsPolicy", b =>
-        b.WithOrigins(builder.Configuration["ClientApp"] ?? "http://localhost:3000")
+        b.WithOrigins(
+                builder.Configuration["ClientApp"] ?? "http://localhost:3000",
+                builder.Configuration["AdminApp"] ?? "http://localhost:4200")
             .AllowAnyHeader()
             .AllowAnyMethod()
             .AllowCredentials());

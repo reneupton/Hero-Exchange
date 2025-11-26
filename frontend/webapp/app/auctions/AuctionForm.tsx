@@ -133,7 +133,7 @@ export default function AuctionForm({ auction }: Props) {
         id = res.id;
         try {
           const profile = await getMyProgress();
-          setProfile(profile ?? undefined);
+          if (profile) setProfile(profile);
         } catch (_) {}
       } else {
         if (auction) {

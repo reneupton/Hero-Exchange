@@ -1,6 +1,9 @@
 import logging
+from typing import Dict
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+
 from config import Settings
 from bot_manager import BotManager
 
@@ -51,6 +54,22 @@ async def bot_start():
 async def bot_stop():
     await manager.stop()
     return {"status": "stopped"}
+
+
+@app.get("/admin/bots/config")
+async def get_config():
+    return manager.config_snapshot()
+
+
+@app.post("/admin/bots/config")
+async def set_config(payload: Dict):
+    await manager.apply_config(payload)
+    return {"status": "applied", "config": manager.config_snapshot()}
+
+
+@app.get("/admin/bots/activity")
+async def activity():
+    return {"events": manager.get_activity()}
 
 
 if __name__ == "__main__":

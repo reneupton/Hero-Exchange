@@ -83,9 +83,13 @@ export default function Listings({ user }: Props) {
     if (!user) return;
     try {
       const profile = await getMyProgress();
-      setProfile(profile ?? undefined);
+      if (profile) {
+        setProfile(profile);
+      }
       const leaderboard = await getLeaderboard();
-      setLeaderboard(leaderboard);
+      if (leaderboard && leaderboard.length > 0) {
+        setLeaderboard(leaderboard);
+      }
     } catch {
       // ignore errors; keep current state
     }
@@ -304,7 +308,7 @@ export default function Listings({ user }: Props) {
               <div className="text-sm font-semibold text-slate-700 uppercase tracking-wide">
                 Leaderboard
               </div>
-              <span className="badge badge-neutral">Top 50</span>
+              <span className="badge badge-neutral">Top 10</span>
             </div>
             <div className="space-y-2 flex-1 overflow-auto pr-1 max-h-[220px]">
               {leaderboard.slice(0, 50).map((entry, idx) => (

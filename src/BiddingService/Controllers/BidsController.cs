@@ -44,6 +44,11 @@ namespace BiddingService.Controllers
                 if (auction == null) return BadRequest("Cannot accept bids on this auction at this time");
             }
 
+            if (auction.Finished || auction.AuctionEnd <= DateTime.UtcNow)
+            {
+                return BadRequest("Auction has ended");
+            }
+
             if (auction.Seller == User.Identity.Name)
             {
                 return BadRequest("You cannot bid on your own auction");
@@ -56,28 +61,19 @@ namespace BiddingService.Controllers
                 Bidder = User.Identity.Name
             };
 
-            if (auction.AuctionEnd < DateTime.UtcNow)
-            {
-                bid.BidStatus = BidStatus.Finished;
-            }
-            else
-            {
-                var highBid = await DB.Find<Bid>()
+            var highBid = await DB.Find<Bid>()
                     .Match(a => a.AuctionId == auctionId)
                     .Sort(b => b.Descending(x => x.Amount))
                     .ExecuteFirstAsync();
-
-                if (highBid != null && amount > highBid.Amount || highBid == null)
-                {
-                    bid.BidStatus = amount > auction.ReservePrice
+            if ((highBid != null && amount > highBid.Amount) || highBid == null)
+            {
+                bid.BidStatus = amount > auction.ReservePrice
                     ? BidStatus.Accepted
                     : BidStatus.AcceptedBelowReserve;
-                }
-
-                if (highBid != null && bid.Amount <= highBid.Amount)
-                {
-                    bid.BidStatus = BidStatus.TooLow;
-                }
+            }
+            else if (highBid != null && bid.Amount <= highBid.Amount)
+            {
+                bid.BidStatus = BidStatus.TooLow;
             }
 
             await DB.SaveAsync(bid);

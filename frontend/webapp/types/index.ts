@@ -44,6 +44,35 @@ export type PagedResult<T> = {
     amount?: number
   }
 
+  export type AuctionStatusChanged = {
+    auctionId: string
+    status: string
+    changedBy?: string
+    changedAt: string
+  }
+
+  export type UserAvatarUpdated = {
+    username: string
+    avatarUrl: string
+    updatedBy?: string
+    updatedAt: string
+  }
+
+  export type UserProgressAdjusted = {
+    username: string
+    balanceDelta?: number
+    xpDelta?: number
+    level?: number
+    updatedBy?: string
+    updatedAt: string
+  }
+
+  export type UserCooldownReset = {
+    username: string
+    updatedBy?: string
+    updatedAt: string
+  }
+
   export type PlayerProfile = {
     username: string
     avatarUrl: string
