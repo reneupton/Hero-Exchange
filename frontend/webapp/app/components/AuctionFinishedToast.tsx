@@ -12,8 +12,8 @@ type Props = {
 export default function AuctionFinishedToast({finishedAuction, auction} : Props) {
   return (
     <Link href={`/auctions/details/${auction.id}`} className='flex flex-col items-center'>
-        <div className='flex flex-row items-center gap-3 bg-white/85 px-3 py-2 rounded-2xl border border-white/70 shadow-lg'>
-            <Image 
+        <div className='flex flex-row items-center gap-3 px-3 py-2 rounded-2xl shadow-lg' style={{background: 'var(--card)', border: '1px solid var(--card-border)'}}>
+            <Image
                 src={auction.imageUrl}
                 alt='image'
                 height={80}
@@ -22,13 +22,13 @@ export default function AuctionFinishedToast({finishedAuction, auction} : Props)
             />
 
             <div className='flex flex-col text-left'>
-                <span className='font-semibold text-slate-800'>Auction finished: {auction.title} ({auction.brand})</span>
+                <span className='font-semibold text-slate-100'>Auction finished: {auction.title} ({auction.brand})</span>
                 {finishedAuction.itemSold && finishedAuction.amount ? (
-                    <p className='text-sm text-slate-600'>
+                    <p className='text-sm text-slate-300'>
                       Congrats {finishedAuction.winner}! Victory price {formatGold(finishedAuction.amount)}
                     </p>
                 ) : (
-                    <p className='text-sm text-slate-600'>This item did not sell</p>
+                    <p className='text-sm text-slate-300'>This item did not sell</p>
                 )}
             </div>
 

@@ -5,7 +5,7 @@ EXPOSE 80
 # Copy all .csproj files and restore as distinct laters. Use of the same COPY command
 # for every dockerfile in the project to take advantage of docker caching
 
-COPY FlogIt.sln FlogIt.sln
+COPY HeroExchange.sln HeroExchange.sln
 COPY src/AuctionService/AuctionService.csproj src/AuctionService/AuctionService.csproj
 COPY src/SearchService/SearchService.csproj src/SearchService/SearchService.csproj
 COPY src/GatewayService/GatewayService.csproj src/GatewayService/GatewayService.csproj
@@ -16,7 +16,7 @@ COPY src/NotificationService/NotificationService.csproj src/NotificationService/
 
 # Restore package dependancies
 
-RUN dotnet restore FlogIt.sln
+RUN dotnet restore HeroExchange.sln
 
 # Copy the app folders over
 
