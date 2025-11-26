@@ -10,8 +10,8 @@ class Settings(BaseSettings):
     bot_users: str = "alice,bob"
     bot_password: str = "Pass123$"
 
-    bid_rate_per_min: int = 4
-    create_rate_per_min: int = 1
+    bid_rate_per_min: int = 2
+    create_rate_per_min: float = 0.5
     mystery_interval_min: int = 60
     daily_interval_hours: int = 24
 
@@ -20,7 +20,7 @@ class Settings(BaseSettings):
     min_balance: int = 500
     auto_topup: bool = False
 
-    categories: List[str] = ["Keyboard", "Mouse", "Monitor", "GPU", "Headset", "PC", "Chair"]
+    categories: List[str] = ["Common", "Rare", "Epic", "Legendary"]
 
     class Config:
         env_file = ".env"

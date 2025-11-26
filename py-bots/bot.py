@@ -188,7 +188,10 @@ class AuctionBot:
         )
         resp.raise_for_status()
         data = resp.json()
-        return data.get("results", []) if isinstance(data, dict) else []
+        # API returns list directly or {results: [...]} depending on endpoint
+        if isinstance(data, list):
+            return data
+        return data.get("results", [])
 
     async def create_auction(self):
         if len(self.active_auctions) >= self.settings.max_active_auctions_per_bot:
@@ -224,19 +227,12 @@ class AuctionBot:
         auction_id = auction.get("id")
         current = auction.get("currentHighBid", 0)
         next_bid = current + random.randint(5, 25)
-        payload = {"amount": next_bid}
-        resp = await self.client.post(
-            f"{self.settings.api_base}bids/{auction_id}",
-            json=payload,
-            headers=self.auth_headers(),
-        )
+        # API expects query params: POST /api/bids?auctionId={id}&amount={amount}
+        url = f"{self.settings.api_base}bids?auctionId={auction_id}&amount={next_bid}"
+        resp = await self.client.post(url, headers=self.auth_headers())
         if resp.status_code == 401:
             await self.login()
-            resp = await self.client.post(
-                f"{self.settings.api_base}bids/{auction_id}",
-                json=payload,
-                headers=self.auth_headers(),
-            )
+            resp = await self.client.post(url, headers=self.auth_headers())
         if resp.is_success:
             self.stats.bids_placed += 1
             if self.log_fn:
@@ -261,15 +257,15 @@ class AuctionBot:
 
         if random.random() < (self.settings.bid_rate_per_min / 60):
             auctions = await self.list_live_auctions()
-            random.shuffle(auctions)
-            attempts = 0
-            for a in auctions:
-                if attempts >= self.settings.max_bids_per_auction:
-                    break
+            # Filter to only hero items (condition == "Hero")
+            hero_auctions = [a for a in auctions if a.get("condition") == "Hero"]
+            random.shuffle(hero_auctions)
+            # Place only 1 bid per trigger
+            for a in hero_auctions:
                 if a.get("seller") == self.username:
                     continue
                 await self.place_bid(a)
-                attempts += 1
+                break  # Only bid on one auction per tick
 
 
 async def run_bots(settings: Settings):
