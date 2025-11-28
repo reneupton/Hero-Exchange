@@ -71,7 +71,7 @@ public class ProgressService
         return profile;
     }
 
-    private static void RefreshLevel(UserProgress profile)
+    internal static void RefreshLevel(UserProgress profile)
     {
         profile.OwnedHeroes ??= new List<OwnedHero>();
         var totalPower = CalculateHeroPower(profile);
@@ -79,7 +79,7 @@ public class ProgressService
         profile.Level = Math.Max(1, (totalPower / StatsPerLevel) + 1);
     }
 
-    private static int CalculateCoinBonus(int? amount, double multiplier, int minimum)
+    internal static int CalculateCoinBonus(int? amount, double multiplier, int minimum)
     {
         var raw = (amount ?? 0) * multiplier;
         return Math.Max(minimum, (int)Math.Round(raw));
@@ -331,7 +331,7 @@ public class ProgressService
         return "Common";
     }
 
-    private static int CalculateHeroPower(UserProgress profile)
+    internal static int CalculateHeroPower(UserProgress profile)
     {
         profile.OwnedHeroes ??= new List<OwnedHero>();
         return profile.OwnedHeroes.Sum(h => h.Strength + h.Intellect + h.Vitality + h.Agility);
