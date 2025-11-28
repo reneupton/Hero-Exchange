@@ -91,7 +91,7 @@ namespace BiddingService.Services
                 "Astrael Fallen",
                 "Reaper",
                 76, 74, 72, 66,
-                "/pets/craftpix-991117-free-fallen-angel-chibi-2d-game-sprites/fallen_angel_1/card/frame_0.png"),
+                "/pets/craftpix-991117-free-fallen-angel-chibi-2d-game-sprites/fallen_angels_1/card/frame_0.png"),
             new HeroArchetype(
                 "dresh",
                 "Dresh Wildarrow",

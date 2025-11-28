@@ -26,6 +26,95 @@
     "Helvetica Neue", Arial, sans-serif;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(139, 92, 246, 0.6) rgba(15, 23, 42, 0.4);
+}
+
+/* Global custom scrollbar styling - hidden until hover */
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+  border-radius: 9999px;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: transparent;
+  border-radius: 9999px;
+  border: 2px solid transparent;
+  transition: background 0.3s ease, box-shadow 0.3s ease;
+}
+
+*::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/* Show scrollbar on hover */
+*:hover::-webkit-scrollbar-track {
+  background: rgba(15, 23, 42, 0.5);
+  border: 1px solid rgba(123, 97, 255, 0.2);
+}
+
+*:hover::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #8b5cf6, #22d3ee);
+  border: 2px solid rgba(11, 18, 32, 0.8);
+  box-shadow: 0 0 8px rgba(139, 92, 246, 0.4);
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #a78bfa, #67e8f9);
+  box-shadow: 0 0 12px rgba(139, 92, 246, 0.6), 0 0 20px rgba(34, 211, 238, 0.4);
+}
+
+/* Disable text selection on interactive elements */
+button,
+a,
+[role="button"],
+[role="menuitem"],
+.dropdown-item,
+nav,
+header {
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+}
+
+/* Flowbite dropdown dark theme overrides */
+[data-testid="flowbite-dropdown"] ul li > * {
+  color: var(--text) !important;
+  background: transparent !important;
+}
+
+[data-testid="flowbite-dropdown"] ul li > *:hover {
+  background: rgba(139, 92, 246, 0.15) !important;
+  color: var(--text) !important;
+}
+
+[data-testid="flowbite-dropdown"] ul li:last-child > *:hover {
+  background: rgba(244, 63, 94, 0.15) !important;
+}
+
+/* Flowbite button group dark theme overrides */
+[role="group"] > button:not(.chip-active) {
+  color: var(--text) !important;
+  background: rgba(46, 58, 80, 0.8) !important;
+  border-color: var(--card-border) !important;
+}
+
+[role="group"] > button:not(.chip-active):hover {
+  background: rgba(139, 92, 246, 0.25) !important;
+  color: var(--text) !important;
+  border-color: rgba(139, 92, 246, 0.5) !important;
+}
+
+[role="group"] > button:focus {
+  ring: none !important;
+  box-shadow: none !important;
+  outline: none !important;
 }
 
 body {
@@ -212,30 +301,38 @@ body {
 
   .scrollbar-thin {
     scrollbar-width: thin;
-    scrollbar-color: rgba(255, 255, 255, 0.3) transparent;
+    scrollbar-color: rgba(139, 92, 246, 0.6) rgba(15, 23, 42, 0.4);
   }
 
-  .scrollbar-glow {
-    background: linear-gradient(180deg, rgba(17, 24, 39, 0.4), rgba(15, 23, 42, 0.2));
+  .scrollbar-glow::-webkit-scrollbar-thumb {
+    box-shadow: 0 0 10px rgba(139, 92, 246, 0.5), 0 0 20px rgba(34, 211, 238, 0.3);
   }
 
   .scrollbar-thin::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
+    width: 10px;
+    height: 10px;
   }
 
   .scrollbar-thin::-webkit-scrollbar-track {
-    background: transparent;
+    background: rgba(15, 23, 42, 0.5);
+    border-radius: 9999px;
+    border: 1px solid rgba(123, 97, 255, 0.2);
   }
 
   .scrollbar-thin::-webkit-scrollbar-thumb {
-    background: linear-gradient(180deg, rgba(139, 92, 246, 0.5), rgba(34, 211, 238, 0.5));
+    background: linear-gradient(180deg, var(--accent), var(--accent-3));
     border-radius: 9999px;
-    border: 2px solid rgba(0, 0, 0, 0.2);
+    border: 2px solid rgba(11, 18, 32, 0.8);
+    box-shadow: 0 0 8px rgba(139, 92, 246, 0.4);
   }
 
   .scrollbar-thin::-webkit-scrollbar-thumb:hover {
-    background: linear-gradient(180deg, rgba(139, 92, 246, 0.7), rgba(34, 211, 238, 0.7));
+    background: linear-gradient(180deg, rgba(139, 92, 246, 0.9), rgba(34, 211, 238, 0.9));
+    box-shadow: 0 0 12px rgba(139, 92, 246, 0.6), 0 0 20px rgba(34, 211, 238, 0.4);
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-corner {
+    background: transparent;
   }
 
 

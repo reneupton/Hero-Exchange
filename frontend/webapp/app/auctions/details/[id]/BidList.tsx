@@ -61,7 +61,7 @@ export default function BidList({ user, auction }: Props) {
 
   return (
     <div className="glass-panel ios-shadow rounded-2xl h-full flex flex-col">
-      <div className="py-3 px-4 bg-transparent border-b border-white/60">
+      <div className="py-3 px-4 bg-transparent border-b border-white/60 flex-shrink-0">
         <div className="flex items-center justify-between gap-2 text-[var(--text)]">
           <div className="flex items-center gap-2 text-sm md:text-base font-semibold">
             <Image src={goldIcon} alt="gold" width={18} height={18} className="object-contain" />
@@ -72,7 +72,7 @@ export default function BidList({ user, auction }: Props) {
         </div>
       </div>
 
-      <div className="overflow-auto h-[400px] flex flex-col-reverse px-3 py-2 gap-2">
+      <div className="overflow-auto flex-1 flex flex-col-reverse px-3 py-2 gap-1.5 scrollbar-thin scrollbar-glow">
         {bids.length === 0 ? (
           <EmptyFilter
             title="No bids for this item"
@@ -87,17 +87,17 @@ export default function BidList({ user, auction }: Props) {
         )}
       </div>
 
-      <div className="px-3 pb-3 text-gray-600">
+      <div className="px-3 py-3 text-gray-600 border-t border-white/60 flex-shrink-0 mt-auto">
         {!open ? (
-          <div className="flex items-center justify-center p2 text-sm font-semibold text-slate-600 bg-white/70 rounded-xl px-4 py-3">
+          <div className="flex items-center justify-center text-sm font-semibold text-slate-600 bg-white/70 rounded-xl px-4 py-3">
             This auction has finished
           </div>
         ) : !user ? (
-          <div className="flex items-center justify-center p2 text-sm font-semibold text-slate-600 bg-white/70 rounded-xl px-4 py-3">
+          <div className="flex items-center justify-center text-sm font-semibold text-slate-600 bg-white/70 rounded-xl px-4 py-3">
             Please login to make a bid
           </div>
         ) : user && user.username === auction.seller ? (
-          <div className="flex items-center justify-center p2 text-sm font-semibold text-slate-600 bg-white/70 rounded-xl px-4 py-3">
+          <div className="flex items-center justify-center text-sm font-semibold text-slate-600 bg-white/70 rounded-xl px-4 py-3">
             You cannot bid on your own auction
           </div>
         ) : (

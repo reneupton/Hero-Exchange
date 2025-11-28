@@ -2,7 +2,9 @@
 
 import { useState } from 'react';
 import { gamificationService } from '../services/gamificationService';
-import { FaGift, FaCoins, FaStar, FaLock } from 'react-icons/fa';
+import { FaGift, FaStar, FaLock } from 'react-icons/fa';
+import Image from 'next/image';
+import goldIcon from '@/public/gold2.png';
 import RarityBadge, { RarityBorder } from './RarityBadge';
 import toast from 'react-hot-toast';
 
@@ -153,8 +155,8 @@ export default function MysteryBox({ userId, userBalance, onPurchase }: Props) {
         <div className="flex items-center justify-between">
           <span className="text-[var(--muted)]">Your Balance</span>
           <div className="flex items-center gap-2 text-[var(--accent-2)] font-bold text-lg">
-            <FaCoins />
-            {userBalance.toLocaleString()} Gold
+            <Image src={goldIcon} alt="gold" width={18} height={18} className="object-contain" />
+            {userBalance.toLocaleString()}
           </div>
         </div>
       </div>
@@ -209,10 +211,9 @@ export default function MysteryBox({ userId, userBalance, onPurchase }: Props) {
               {/* Cost */}
               <div className="text-center">
                 <div className="flex items-center justify-center gap-2 text-[var(--accent-2)] font-bold text-xl">
-                  <FaCoins />
+                  <Image src={goldIcon} alt="gold" width={20} height={20} className="object-contain" />
                   {box.cost.toLocaleString()}
                 </div>
-                <div className="text-[var(--muted)] text-xs mt-1">Gold</div>
               </div>
             </div>
           );
@@ -268,7 +269,7 @@ export default function MysteryBox({ userId, userBalance, onPurchase }: Props) {
                     </div>
                     <div className="flex gap-3 text-sm">
                       <div className="flex items-center gap-1 text-[var(--accent-2)]">
-                        <FaCoins />
+                        <Image src={goldIcon} alt="gold" width={14} height={14} className="object-contain" />
                         <span>{reward.flogValue.toLocaleString()}</span>
                       </div>
                       <div className="flex items-center gap-1 text-[var(--accent)]">
@@ -287,7 +288,7 @@ export default function MysteryBox({ userId, userBalance, onPurchase }: Props) {
                 <div className="text-[var(--muted)] text-sm mb-1">Total Value</div>
                 <div className="flex items-center justify-center gap-4">
                   <div className="flex items-center gap-2 text-[var(--accent-2)] font-bold text-xl">
-                    <FaCoins />
+                    <Image src={goldIcon} alt="gold" width={20} height={20} className="object-contain" />
                     {rewards.reduce((sum, r) => sum + r.flogValue, 0).toLocaleString()}
                   </div>
                   <div className="flex items-center gap-2 text-[var(--accent)] font-bold text-xl">

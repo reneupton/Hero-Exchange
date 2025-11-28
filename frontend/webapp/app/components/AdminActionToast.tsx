@@ -81,7 +81,7 @@ export default function AdminActionToast(props: Props) {
       <div className="flex items-center gap-3 px-3 py-2 rounded-2xl shadow-lg" style={toastStyle}>
         {payload.avatarUrl ? (
           <div className="h-12 w-12 relative rounded-2xl overflow-hidden shadow" style={{border: '1px solid var(--card-border)'}}>
-            <Image src={payload.avatarUrl} alt="New avatar" fill className="object-cover" />
+            <Image src={payload.avatarUrl} alt="New avatar" fill sizes="48px" className="object-cover" />
           </div>
         ) : (
           <div className="h-12 w-12 rounded-2xl bg-gradient-to-br from-purple-600 via-rose-600 to-amber-600 flex items-center justify-center text-xl shadow-inner">🪄</div>

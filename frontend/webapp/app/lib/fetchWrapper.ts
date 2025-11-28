@@ -11,7 +11,7 @@ const baseUrl = rawBase?.endsWith("/") ? rawBase : `${rawBase}/`;
 async function get(url: string) {
     const requestOptions = {
         method: 'GET',
-        header: await getHeaders()
+        headers: await getHeaders()
     }
 
     const response = await fetch(baseUrl + url, requestOptions);

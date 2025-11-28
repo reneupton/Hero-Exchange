@@ -8,8 +8,11 @@ import React from "react";
 import Image from "next/image";
 import { HiArrowTrendingUp, HiMiniSparkles, HiOutlineRocketLaunch } from "react-icons/hi2";
 import { BsTrophy } from "react-icons/bs";
+import goldIcon from "@/public/gold2.png";
 import { numberWithCommas } from "../lib/numberWithComma";
 import { useProfileStore } from "@/hooks/useProfileStore";
+import { useSellModalStore } from "@/hooks/useSellModalStore";
+import { FaTag } from "react-icons/fa";
 
 type Props = {
   user: User
@@ -20,6 +23,7 @@ export default function UserActions({user} : Props) {
   const pathname = usePathname();
   const setParams = useParamStore(state => state.setParams);
   const profile = useProfileStore((state) => state.profile);
+  const openSellModal = useSellModalStore((state) => state.openModal);
 
   const ensureDicebearPng = (url: string) => {
     if (!url.includes("dicebear.com")) return url;
@@ -49,9 +53,9 @@ export default function UserActions({user} : Props) {
     <div className="flex items-center gap-3 bg-[rgba(26,32,48,0.9)] px-3 py-2 rounded-full border border-[var(--card-border)] shadow-md">
       <div className="relative">
         <div className="h-10 w-10 rounded-full overflow-hidden border border-[var(--card-border)] shadow relative">
-          <Image src={avatar} alt="avatar" fill className="object-cover" />
+          <Image src={avatar} alt="avatar" fill sizes="40px" className="object-cover" />
         </div>
-        <span className="absolute -bottom-2 left-1/2 -translate-x-1/2 text-[10px] bg-gradient-to-r from-[var(--accent)] to-[var(--accent-3)] text-[var(--bg)] rounded-full px-2 py-0.5 shadow font-semibold">
+        <span className="absolute -bottom-2 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-white/90 shadow text-slate-700">
           Lv {profile?.level ?? 1}
         </span>
       </div>
@@ -59,7 +63,7 @@ export default function UserActions({user} : Props) {
         <span className="text-xs text-[var(--muted)]">Welcome back</span>
         <span className="font-semibold text-[var(--text)]">{user.name ?? user.username}</span>
         <div className="flex gap-1 text-[10px] text-[var(--muted)]">
-          <span className="badge badge-positive">Gold {numberWithCommas(profile?.flogBalance ?? 0)}</span>
+          <span className="badge badge-positive flex items-center gap-1"><Image src={goldIcon} alt="gold" width={12} height={12} className="object-contain" />{numberWithCommas(profile?.flogBalance ?? 0)}</span>
           <span className="badge badge-neutral-soft">XP {numberWithCommas(profile?.experience ?? 0)}</span>
         </div>
       </div>
@@ -78,8 +82,11 @@ export default function UserActions({user} : Props) {
     <Dropdown.Item className="text-[var(--text)] hover:bg-[rgba(139,92,246,0.15)]" icon={BsTrophy} onClick={setWinner}>
         Auctions won
     </Dropdown.Item>
-    <Dropdown.Item className="text-[var(--text)] hover:bg-[rgba(139,92,246,0.15)]" icon={HiOutlineRocketLaunch} onClick={() => router.push('/auctions/create')}>
-        List a hero
+    <Dropdown.Item className="text-[var(--text)] hover:bg-[rgba(139,92,246,0.15)]" icon={FaTag} onClick={() => {
+        if (pathname !== '/') router.push('/');
+        setTimeout(() => openSellModal(), 100);
+    }}>
+        Sell a hero
     </Dropdown.Item>
     <Dropdown.Divider />
     <Dropdown.Item className="text-[var(--text)] hover:bg-[rgba(244,63,94,0.15)]" onClick={() => signOut({callbackUrl: '/'})}>

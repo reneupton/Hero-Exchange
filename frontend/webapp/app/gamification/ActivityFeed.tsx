@@ -8,9 +8,10 @@ import {
   FaTrophy,
   FaStar,
   FaGift,
-  FaCoins,
   FaUserPlus,
 } from 'react-icons/fa';
+import Image from 'next/image';
+import goldIcon from '@/public/gold2.png';
 
 type ActivityType =
   | 'purchase'
@@ -88,11 +89,11 @@ export default function ActivityFeed({
       case 'quest_complete':
         return <FaGift className="text-pink-400" />;
       case 'mystery_box':
-        return <FaCoins className="text-orange-400" />;
+        return <Image src={goldIcon} alt="gold" width={16} height={16} className="object-contain" />;
       case 'new_user':
         return <FaUserPlus className="text-cyan-400" />;
       default:
-        return <FaCoins className="text-gray-400" />;
+        return <Image src={goldIcon} alt="gold" width={16} height={16} className="object-contain opacity-50" />;
     }
   };
 
@@ -147,7 +148,7 @@ export default function ActivityFeed({
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-2xl font-bold text-white flex items-center gap-2">
-          <FaCoins className="text-orange-400" />
+          <Image src={goldIcon} alt="gold" width={24} height={24} className="object-contain" />
           {showUserOnly ? 'Your Activity' : 'Live Activity Feed'}
         </h2>
         <div className="flex items-center gap-2">
@@ -160,7 +161,7 @@ export default function ActivityFeed({
       <div className="space-y-3 max-h-[600px] overflow-y-auto">
         {activities.length === 0 ? (
           <div className="text-center py-12 text-gray-500">
-            <FaCoins className="text-5xl mx-auto mb-3 opacity-30" />
+            <Image src={goldIcon} alt="gold" width={48} height={48} className="object-contain mx-auto mb-3 opacity-30" />
             <p>No recent activity</p>
           </div>
         ) : (
@@ -199,8 +200,8 @@ export default function ActivityFeed({
                       </span>
                     )}
                     {activity.metadata.amount !== undefined && (
-                        <span className="text-xs bg-[rgba(245,158,11,0.25)] text-[var(--accent-2)] px-2 py-1 rounded font-semibold">
-                          {activity.metadata.amount.toLocaleString()} Gold
+                        <span className="text-xs bg-[rgba(245,158,11,0.25)] text-[var(--accent-2)] px-2 py-1 rounded font-semibold flex items-center gap-1">
+                          <Image src={goldIcon} alt="gold" width={12} height={12} className="object-contain" />{activity.metadata.amount.toLocaleString()}
                         </span>
                     )}
                     {activity.metadata.level !== undefined && (

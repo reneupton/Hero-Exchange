@@ -3,7 +3,9 @@
 import { useEffect } from 'react';
 import { useWalletStore } from '@/hooks/useWalletStore';
 import { gamificationService } from '../services/gamificationService';
-import { FaCoins, FaLock, FaArrowUp, FaArrowDown } from 'react-icons/fa';
+import { FaLock, FaArrowUp, FaArrowDown } from 'react-icons/fa';
+import Image from 'next/image';
+import goldIcon from '@/public/gold2.png';
 
 type Props = {
   userId: string;
@@ -45,11 +47,10 @@ export default function FlogWallet({ userId, compact = false }: Props) {
   if (compact) {
     return (
       <div className="flex items-center gap-2 bg-gradient-to-r from-orange-500 to-yellow-500 text-white px-4 py-2 rounded-lg shadow-lg">
-        <FaCoins className="text-xl" />
+        <Image src={goldIcon} alt="gold" width={20} height={20} className="object-contain" />
         <span className="font-bold text-lg">
           {wallet.flogBalance.toLocaleString()}
         </span>
-        <span className="text-sm opacity-90">Gold</span>
       </div>
     );
   }
@@ -59,7 +60,7 @@ export default function FlogWallet({ userId, compact = false }: Props) {
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-2xl font-bold text-white flex items-center gap-2">
-          <FaCoins className="text-yellow-500" />
+          <Image src={goldIcon} alt="gold" width={24} height={24} className="object-contain" />
           Gold Wallet
         </h2>
         <div className="text-sm text-gray-400">Demo Currency</div>
@@ -68,10 +69,10 @@ export default function FlogWallet({ userId, compact = false }: Props) {
       {/* Main Balance */}
       <div className="mb-6">
         <div className="text-gray-400 text-sm mb-1">Available Balance</div>
-        <div className="text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-500">
+        <div className="text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-500 flex items-center gap-2">
           {wallet.flogBalance.toLocaleString()}
+          <Image src={goldIcon} alt="gold" width={40} height={40} className="object-contain" />
         </div>
-        <div className="text-gray-400 text-lg">Gold</div>
       </div>
 
       {/* Stats Grid */}

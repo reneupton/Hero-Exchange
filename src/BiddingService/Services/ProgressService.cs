@@ -261,7 +261,7 @@ public class ProgressService
         var profile = await GetOrCreateProfile(username);
         profile.OwnedHeroes ??= new List<OwnedHero>();
         var now = DateTime.UtcNow;
-        if (profile.LastMysteryRewardAt.HasValue && profile.LastMysteryRewardAt.Value.AddHours(24) > now)
+        if (profile.LastMysteryRewardAt.HasValue && profile.LastMysteryRewardAt.Value.AddSeconds(5) > now)
         {
             return new SummonResultDto
             {

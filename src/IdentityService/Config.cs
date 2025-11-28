@@ -4,6 +4,36 @@ namespace IdentityService;
 
 public static class Config
 {
+    private static ICollection<string> GetRedirectUris(IConfiguration config)
+    {
+        var uris = new List<string>();
+
+        // Primary ClientApp from config (production or docker)
+        var clientApp = config["ClientApp"];
+        if (!string.IsNullOrEmpty(clientApp))
+        {
+            uris.Add(clientApp + "/api/auth/callback/id-server");
+        }
+
+        // Additional redirect URIs for local development
+        var additionalUris = config["AdditionalRedirectUris"];
+        if (!string.IsNullOrEmpty(additionalUris))
+        {
+            foreach (var uri in additionalUris.Split(',', StringSplitOptions.RemoveEmptyEntries))
+            {
+                uris.Add(uri.Trim() + "/api/auth/callback/id-server");
+            }
+        }
+
+        // Default localhost URIs for development
+        if (!uris.Any(u => u.Contains("localhost:3000")))
+            uris.Add("http://localhost:3000/api/auth/callback/id-server");
+        if (!uris.Any(u => u.Contains("localhost:3001")))
+            uris.Add("http://localhost:3001/api/auth/callback/id-server");
+
+        return uris;
+    }
+
     public static IEnumerable<IdentityResource> IdentityResources =>
         new IdentityResource[]
         {
@@ -42,7 +72,7 @@ public static class Config
                 ClientSecrets = {new Secret(config["ClientSecret"].Sha256())},
                 AllowedGrantTypes = GrantTypes.CodeAndClientCredentials,
                 RequirePkce = false,
-                RedirectUris = {config["ClientApp"] + "/api/auth/callback/id-server"},
+                RedirectUris = GetRedirectUris(config),
                 AllowOfflineAccess = true,
                 AllowedScopes = {"openid", "profile", "auctionApp"},
                 AccessTokenLifetime = 3600*24*30,

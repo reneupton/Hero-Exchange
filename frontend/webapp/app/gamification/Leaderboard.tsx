@@ -2,7 +2,9 @@
 
 import { useEffect, useState } from 'react';
 import { gamificationService } from '../services/gamificationService';
-import { FaTrophy, FaMedal, FaAward, FaCoins, FaStar } from 'react-icons/fa';
+import { FaTrophy, FaMedal, FaAward, FaStar } from 'react-icons/fa';
+import Image from 'next/image';
+import goldIcon from '@/public/gold2.png';
 
 type LeaderboardEntry = {
   userId: string;
@@ -120,8 +122,7 @@ export default function Leaderboard({ userId, limit = 100 }: Props) {
           onClick={() => setActiveTab('flog')}
           className={`chip ${activeTab === 'flog' ? 'chip-active' : ''}`}
         >
-          <FaCoins className="inline mr-2" />
-          Gold
+          <Image src={goldIcon} alt="gold" width={16} height={16} className="inline object-contain" />
         </button>
         <button
           onClick={() => setActiveTab('achievements')}
@@ -190,10 +191,10 @@ export default function Leaderboard({ userId, limit = 100 }: Props) {
                   {activeTab === 'flog' && (
                     <>
                       <div className="text-center">
-                        <div className="text-[var(--accent-2)] font-bold text-lg">
+                        <div className="text-[var(--accent-2)] font-bold text-lg flex items-center gap-1">
                           {entry.flogBalance.toLocaleString()}
+                          <Image src={goldIcon} alt="gold" width={14} height={14} className="object-contain" />
                         </div>
-                        <div className="text-[var(--muted)] text-xs">Gold</div>
                       </div>
                       <div className="text-center">
                         <div className="text-[var(--accent)] font-semibold">

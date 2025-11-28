@@ -1,9 +1,17 @@
 'use client'
 
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import { Toaster } from 'react-hot-toast'
 
 export default function ToasterProvider() {
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  if (!mounted) return null
+
   return (
     <Toaster
       position='bottom-right'

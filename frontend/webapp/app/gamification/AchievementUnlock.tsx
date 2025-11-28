@@ -3,6 +3,8 @@
 import { useEffect } from 'react';
 import { useGamificationStore } from '@/hooks/useGamificationStore';
 import { FaTrophy, FaTimes } from 'react-icons/fa';
+import Image from 'next/image';
+import goldIcon from '@/public/gold2.png';
 
 export default function AchievementUnlock() {
   const { showAchievement, setShowAchievement } = useGamificationStore();
@@ -77,8 +79,8 @@ export default function AchievementUnlock() {
                   {showAchievement.description}
                 </p>
                 <div className="flex gap-3 text-sm">
-                  <span className="text-[var(--accent-2)] font-semibold">
-                    +{showAchievement.flogReward} Gold
+                  <span className="text-[var(--accent-2)] font-semibold flex items-center gap-1">
+                    +{showAchievement.flogReward} <Image src={goldIcon} alt="gold" width={14} height={14} className="object-contain" />
                   </span>
                   <span className="text-[var(--accent)] font-semibold">
                     +{showAchievement.xpReward} XP

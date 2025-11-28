@@ -35,19 +35,17 @@ export default function BidItem({bid} : Props) {
 
   return (
     <div className={`
-        border border-white/60 bg-white/85 px-3 py-3 rounded-2xl glass-panel
-        flex justify-between items-center mb-2 shadow-sm
+        border border-white/60 bg-white/85 px-3 py-2 rounded-xl glass-panel
+        flex justify-between items-center shadow-sm
         ${getBidInfo().bgColor}
     `}>
-        <div className = 'flex flex-col'>
-            <span className='font-semibold text-slate-800'>Bidder: {bid.bidder}</span>
-            <span className='text-gray-700 text-sm'>Time: {format(new Date(bid.bidTime), "dd MMM yyyy h:mm a")}</span>
+        <div className='flex flex-col gap-0.5'>
+            <span className='text-sm font-semibold text-slate-800'>{bid.bidder}</span>
+            <span className='text-xs text-gray-600'>{format(new Date(bid.bidTime), "dd MMM h:mm a")}</span>
         </div>
-        <div className='flex flex-col text-right'>
-            <div className='text-xl font-semibold'>{formatGold(bid.amount)}</div>
-            <div className='flex flex-row items-center'>
-                <span>{getBidInfo().text}</span>
-            </div>
+        <div className='flex flex-col items-end gap-0.5'>
+            <div className='text-base font-semibold'>{formatGold(bid.amount)}</div>
+            <div className='text-xs'>{getBidInfo().text}</div>
         </div>
     </div>
   )

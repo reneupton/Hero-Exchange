@@ -51,7 +51,7 @@ export default function AuctionCard({ auction, character, owned, onSelect }: Pro
               alt={character.name}
             />
           ) : (
-            <Image src={character.cardImage} alt={character.name} fill className="object-contain pointer-events-none" />
+            <Image src={character.cardImage} alt={character.name} fill sizes="(max-width:768px) 100vw, (max-width:1200px) 50vw, 25vw" className="object-contain pointer-events-none" />
           )}
           <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/0 to-black/60 pointer-events-none" />
           <div className="absolute inset-0 flex flex-col justify-between p-3 pointer-events-none">

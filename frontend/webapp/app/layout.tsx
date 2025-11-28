@@ -31,7 +31,7 @@ export default async function RootLayout({
         </div>
         <ToasterProvider />
         <Navbar></Navbar>
-        <main className='container mx-auto px-5 pt-10'>
+        <main className='max-w-[1920px] mx-auto px-8 pt-10'>
           <SignalRProvider user={user}>
             <GamificationBootstrap user={user}>
               {children}

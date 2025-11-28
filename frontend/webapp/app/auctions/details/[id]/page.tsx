@@ -65,7 +65,7 @@ export default async function Details({ params }: { params: { id: string } }) {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <div className="w-full bg-[rgba(26,32,48,0.7)] aspect-h-10 aspect-w-16 rounded-2xl overflow-hidden relative ios-shadow border border-[var(--card-border)]">
-            <Image src={character.cardImage} alt={character.name} fill className="object-contain" />
+            <Image src={character.cardImage} alt={character.name} fill sizes="(max-width:1024px) 100vw, 50vw" className="object-contain" />
           </div>
           <BidList user={user} auction={data} />
         </div>
