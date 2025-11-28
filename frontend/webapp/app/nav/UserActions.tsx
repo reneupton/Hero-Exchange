@@ -36,12 +36,12 @@ export default function UserActions({user} : Props) {
 
   function setWinner(){
     setParams({winner: user.username, seller: undefined, filterBy: 'finished'})
-    if(pathname != '/') router.push('/')
+    if(pathname !== '/') router.push('/')
   }
 
   function setSeller(){
     setParams({seller: user.username, winner: undefined, filterBy: 'live'})
-    if(pathname != '/') router.push('/')
+    if(pathname !== '/') router.push('/')
   }
 
   const avatar = ensureDicebearPng(
