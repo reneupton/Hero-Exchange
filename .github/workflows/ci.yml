@@ -48,11 +48,17 @@ jobs:
         with:
           dotnet-version: '8.0.x'
 
-      - name: Restore dependencies
-        run: dotnet restore
+      - name: Restore solution
+        run: dotnet restore HeroExchange.sln
 
-      - name: Build
-        run: dotnet build --no-restore
+      - name: Restore test project
+        run: dotnet restore tests/BiddingService.Tests/BiddingService.Tests.csproj
+
+      - name: Build solution
+        run: dotnet build HeroExchange.sln --no-restore
+
+      - name: Build test project
+        run: dotnet build tests/BiddingService.Tests/BiddingService.Tests.csproj --no-restore
 
       - name: Run tests
-        run: dotnet test --no-build --verbosity normal
+        run: dotnet test tests/BiddingService.Tests/BiddingService.Tests.csproj --no-build --verbosity normal
