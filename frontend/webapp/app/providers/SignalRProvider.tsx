@@ -65,14 +65,12 @@ export default function SignalRProvider({ children, user }: Props) {
   const apiUrl =
     process.env.NEXT_PUBLIC_NOTIFY_URL ||
     (process.env.NODE_ENV === "production"
-      ? "https://api.flogitdemoapp.co.uk/notifications"
+      ? undefined
       : "http://localhost:7004/notifications");
 
   useEffect(() => {
-    const newConnection = new HubConnectionBuilder()
-      .withUrl(apiUrl!)
-      .withAutomaticReconnect()
-      .build();
+    if (!apiUrl) return;
+    const newConnection = new HubConnectionBuilder().withUrl(apiUrl).withAutomaticReconnect().build();
 
     setConnection(newConnection);
   }, [apiUrl]);
@@ -106,9 +104,7 @@ export default function SignalRProvider({ children, user }: Props) {
               auction,
               {
                 loading: "Loading...",
-                success: (auction) => (
-                  <BidPlacedToast bid={bid} auction={auction} />
-                ),
+                success: (auction) => <BidPlacedToast bid={bid} auction={auction} />,
                 error: (err) => "Bid placed !",
               },
               { success: { duration: 6000, icon: null } }
@@ -124,173 +120,144 @@ export default function SignalRProvider({ children, user }: Props) {
             }
           });
 
-          connection.on(
-            "AuctionFinished",
-            (finishedAuction: AuctionFinished) => {
+          connection.on("AuctionFinished", (finishedAuction: AuctionFinished) => {
+            if (user && (finishedAuction.winner === user.username || finishedAuction.seller === user.username)) {
+              getMyProgress()
+                .then((profile) => {
+                  if (profile) setProfile(profile);
+                  return getLeaderboard();
+                })
+                .then(setLeaderboard)
+                .catch(() => {});
+            }
+
+            const auction = getDetailedViewData(finishedAuction.auctionId);
+            return toast.promise(
+              auction,
+              {
+                loading: "Loading...",
+                success: (auction) => (
+                  <AuctionFinishedToast finishedAuction={finishedAuction} auction={auction} />
+                ),
+                error: (err) => "Auction finished!",
+              },
+              { success: { duration: 6000, icon: null } }
+            );
+          });
+
+          connection.on("UserProgressAdjusted", async (payload: UserProgressAdjusted) => {
+            if (!user || payload.username !== user.username) return;
+            try {
+              const current = profileRef.current;
+              if (current) {
+                const updated = { ...current };
+                if (typeof payload.balanceDelta === "number") {
+                  updated.flogBalance = (updated.flogBalance ?? 0) + payload.balanceDelta;
+                }
+                if (typeof payload.xpDelta === "number") {
+                  updated.experience = (updated.experience ?? 0) + payload.xpDelta;
+                }
+                if (typeof payload.level === "number") {
+                  updated.level = payload.level;
+                }
+                profileRef.current = updated;
+                setProfile(updated);
+              }
+              const profile = await getMyProgress();
+              if (profile) {
+                profileRef.current = profile;
+                setProfile(profile);
+              }
+              const leaderboard = await getLeaderboard();
+              if (leaderboard) setLeaderboard(leaderboard);
+              playChime();
+              toast.custom(<AdminActionToast type="progress" payload={payload as any} />, {
+                duration: 6000,
+              });
+            } catch {
+              // silent fail; keep existing state
+            }
+          });
+
+          connection.on("UserAvatarUpdated", async (payload: UserAvatarUpdated) => {
+            if (!user || payload.username !== user.username) return;
+            try {
+              const current = profileRef.current;
+              if (current) {
+                const updated = { ...current, avatarUrl: payload.avatarUrl };
+                profileRef.current = updated;
+                setProfile(updated);
+              }
+              const profile = await getMyProgress();
+              if (profile) {
+                profileRef.current = profile;
+                setProfile(profile);
+              }
+              playChime();
+              toast.custom(<AdminActionToast type="avatar" payload={payload as any} />, {
+                duration: 6000,
+              });
+            } catch {
+              // ignore errors; keep existing state
+            }
+          });
+
+          connection.on("AuctionStatusChanged", async (payload: AuctionStatusChanged) => {
+            setStatus(payload.auctionId, payload.status);
+            try {
+              const auction = await getDetailedViewData(payload.auctionId);
               if (
                 user &&
-            (finishedAuction.winner === user.username ||
-              finishedAuction.seller === user.username)
-          ) {
-            getMyProgress()
-              .then((profile) => {
-                if (profile) setProfile(profile);
-                return getLeaderboard();
-              })
-                  .then(setLeaderboard)
-                  .catch(() => {});
-              }
-
-              const auction = getDetailedViewData(finishedAuction.auctionId);
-              return toast.promise(
-                auction,
-                {
-                  loading: "Loading...",
-                  success: (auction) => (
-                    <AuctionFinishedToast
-                      finishedAuction={finishedAuction}
-                      auction={auction}
-                    />
-                  ),
-                  error: (err) => "Auction finished!",
-                },
-                { success: { duration: 6000, icon: null } }
-              );
-            }
-          );
-
-          connection.on(
-            "UserProgressAdjusted",
-            async (payload: UserProgressAdjusted) => {
-              if (!user || payload.username !== user.username) return;
-              try {
-                const current = profileRef.current;
-                if (current) {
-                  const updated = { ...current };
-                  if (typeof payload.balanceDelta === "number") {
-                    updated.flogBalance = (updated.flogBalance ?? 0) + payload.balanceDelta;
-                  }
-                  if (typeof payload.xpDelta === "number") {
-                    updated.experience = (updated.experience ?? 0) + payload.xpDelta;
-                  }
-                  if (typeof payload.level === "number") {
-                    updated.level = payload.level;
-                  }
-                  profileRef.current = updated;
-                  setProfile(updated);
-                }
-                const profile = await getMyProgress();
-                if (profile) {
-                  profileRef.current = profile;
-                  setProfile(profile);
-                }
-                const leaderboard = await getLeaderboard();
-                if (leaderboard) setLeaderboard(leaderboard);
-                playChime();
-                toast.custom(
-                  <AdminActionToast type="progress" payload={payload as any} />,
-                  { duration: 6000 }
-                );
-              } catch {
-                // silent fail; keep existing state
-              }
-            }
-          );
-
-          connection.on(
-            "UserAvatarUpdated",
-            async (payload: UserAvatarUpdated) => {
-              if (!user || payload.username !== user.username) return;
-              try {
-                const current = profileRef.current;
-                if (current) {
-                  const updated = { ...current, avatarUrl: payload.avatarUrl };
-                  profileRef.current = updated;
-                  setProfile(updated);
-                }
-                const profile = await getMyProgress();
-                if (profile) {
-                  profileRef.current = profile;
-                  setProfile(profile);
-                }
-                playChime();
-                toast.custom(
-                  <AdminActionToast type="avatar" payload={payload as any} />,
-                  { duration: 6000 }
-                );
-              } catch {
-                // ignore errors; keep existing state
-              }
-            }
-          );
-
-          connection.on(
-            "AuctionStatusChanged",
-            async (payload: { auctionId: string; status: string; changedBy?: string }) => {
-              setStatus(payload.auctionId, payload.status);
-              try {
-                const auction = await getDetailedViewData(payload.auctionId);
-                if (
-                  user &&
-                  (auction.seller === user.username ||
-                    (auction.winner && auction.winner === user.username))
-                ) {
-                  playChime();
-                  toast.custom(
-                    <AdminActionToast
-                      type="status"
-                      payload={{
-                        auctionId: payload.auctionId,
-                        status: payload.status,
-                        changedBy: payload.changedBy,
-                        title: auction.title,
-                        brand: auction.brand,
-                      }}
-                    />,
-                    { duration: 6000 }
-                  );
-                }
-              } catch {
-                // ignore errors; keep existing state
-              }
-            }
-          );
-
-          connection.on(
-            "UserCooldownReset",
-            async (payload: { username: string }) => {
-              if (!user || payload.username !== user.username) return;
-              try {
-                const current = profileRef.current;
-                if (current) {
-                  const updated = {
-                    ...current,
-                    lastMysteryRewardAt: undefined,
-                    lastMysteryRewardCoins: undefined as any,
-                    lastMysteryRewardXp: undefined as any,
-                    lastDailyReward: undefined,
-                  };
-                  profileRef.current = updated;
-                  setProfile(updated);
-                }
-                const profile = await getMyProgress();
-                if (profile) {
-                  profileRef.current = profile;
-                  setProfile(profile);
-                }
+                (auction.seller === user.username || (auction.winner && auction.winner === user.username))
+              ) {
                 playChime();
                 toast.custom(
                   <AdminActionToast
-                    type="cooldown"
-                    payload={{ username: payload.username }}
+                    type="status"
+                    payload={{
+                      auctionId: payload.auctionId,
+                      status: payload.status,
+                      changedBy: payload.changedBy,
+                      title: auction.title,
+                      brand: auction.brand,
+                    }}
                   />,
                   { duration: 6000 }
                 );
-              } catch {
-                // ignore errors
               }
+            } catch {
+              // ignore errors; keep existing state
             }
-          );
+          });
+
+          connection.on("UserCooldownReset", async (payload: UserCooldownReset) => {
+            if (!user || payload.username !== user.username) return;
+            try {
+              const current = profileRef.current;
+              if (current) {
+                const updated = {
+                  ...current,
+                  lastMysteryRewardAt: undefined,
+                  lastMysteryRewardCoins: undefined as any,
+                  lastMysteryRewardXp: undefined as any,
+                  lastDailyReward: undefined,
+                };
+                profileRef.current = updated;
+                setProfile(updated);
+              }
+              const profile = await getMyProgress();
+              if (profile) {
+                profileRef.current = profile;
+                setProfile(profile);
+              }
+              playChime();
+              toast.custom(<AdminActionToast type="cooldown" payload={{ username: payload.username }} />, {
+                duration: 6000,
+              });
+            } catch {
+              // ignore errors
+            }
+          });
         })
         .catch((error) => console.log(error));
     }

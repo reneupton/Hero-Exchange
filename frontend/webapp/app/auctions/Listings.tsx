@@ -22,7 +22,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import LoadingSpinner from "../components/LoadingSpinner";
 import { characterCatalog, CharacterDefinition } from "../data/characterCatalog";
 import AnimatedHeroSprite from "../components/AnimatedHeroSprite";
-import { signIn } from "next-auth/react";
+import { signIn, signOut } from "next-auth/react";
 import BidList from "./details/[id]/BidList";
 import SellHeroModal from "../components/SellHeroModal";
 import HeroDetailModal from "../components/HeroDetailModal";
@@ -324,9 +324,11 @@ export default function Listings({ user }: Props) {
     signIn("id-server");
   };
 
-  const handleGuestLogin = () => {
+  const handleGuestLogin = async () => {
     const guestHint = process.env.NEXT_PUBLIC_GUEST_LOGIN_HINT || "guest";
-    signIn("id-server", { login_hint: guestHint });
+    // Ensure any existing session is cleared before forcing a guest login
+    await signOut({ redirect: false });
+    await signIn("id-server", { login_hint: guestHint, prompt: "login", callbackUrl: "/" });
   };
 
   async function handleMysteryBox() {
