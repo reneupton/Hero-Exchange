@@ -1,5 +1,7 @@
 'use client'
 
+/* eslint-disable react/self-closing-comp */
+
 import { useParamStore } from '@/hooks/useParamsStore'
 import { usePathname, useRouter } from 'next/navigation'
 import React, { useState } from 'react'

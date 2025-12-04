@@ -1,5 +1,7 @@
 "use client";
 
+/* eslint-disable react/no-array-index-key */
+
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import { CharacterDefinition, characterCatalog } from "../data/characterCatalog";
@@ -47,6 +49,30 @@ const deriveBasePath = (cardImage: string) => {
   return match ? match[1] : "";
 };
 
+const allowedImageDomains = new Set([
+  "cdn.pixabay.com",
+  "people.com",
+  "res.cloudinary.com",
+  "images.unsplash.com",
+  "api.dicebear.com",
+]);
+
+const normalizeCardImage = (img?: string, fallback?: string) => {
+  if (!img) return fallback ?? "";
+  if (img.startsWith("http")) {
+    try {
+      const host = new URL(img).hostname.toLowerCase();
+      if (!allowedImageDomains.has(host)) {
+        return fallback ?? "";
+      }
+    } catch {
+      return fallback ?? "";
+    }
+    return img;
+  }
+  return img.startsWith("/") ? img : `/${img}`;
+};
+
 export default function DailySummonModal({ isOpen, onClose, hero, goldAwarded, rarity }: Props) {
   const [phase, setPhase] = useState<"opening" | "reveal" | "shown">("opening");
 
@@ -67,9 +93,15 @@ export default function DailySummonModal({ isOpen, onClose, hero, goldAwarded, r
   if (!isOpen || !hero) return null;
 
   // Look up card image from catalog
-  const catalogHero = characterCatalog.find((c) => c.id === hero.variantId)
-    || characterCatalog.find((c) => c.id.startsWith(hero.heroId + "-"));
-  const cardImage = catalogHero?.cardImage || hero.cardImage || "";
+  const catalogHero =
+    characterCatalog.find((c) => c.id === hero.variantId) ||
+    characterCatalog.find((c) => c.id.startsWith(hero.heroId + "-")) ||
+    characterCatalog.find((c) => c.name.toLowerCase() === hero.name.toLowerCase());
+
+  const fallbackCardImage =
+    "/pets/craftpix-net-919731-free-chibi-dark-oracle-character-sprites/dark_oracle_1/card/frame_0.png";
+  const preferredImage = catalogHero?.cardImage || hero.cardImage || fallbackCardImage;
+  const cardImage = normalizeCardImage(preferredImage, fallbackCardImage);
   const basePath = cardImage ? deriveBasePath(cardImage) : "";
 
   const colors = rarityColors[rarity] || rarityColors.Common;
@@ -204,6 +236,7 @@ export default function DailySummonModal({ isOpen, onClose, hero, goldAwarded, r
       {/* Particle Effects for Legendary */}
       {rarity === "Legendary" && (phase === "reveal" || phase === "shown") && (
         <div className="absolute inset-0 pointer-events-none overflow-hidden">
+          {/* eslint-disable-next-line react/no-array-index-key */}
           {[...Array(20)].map((_, i) => (
             <div
               key={i}

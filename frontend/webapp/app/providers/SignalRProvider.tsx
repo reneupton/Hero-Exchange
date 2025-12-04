@@ -1,5 +1,7 @@
 "use client";
 
+/* eslint-disable no-console */
+
 import { useAuctionStore } from "@/hooks/useAuctionStore";
 import { useBidStore } from "@/hooks/useBidStore";
 import {

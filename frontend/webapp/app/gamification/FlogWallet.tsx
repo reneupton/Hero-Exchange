@@ -1,4 +1,5 @@
-'use client';
+"use client";
+/* eslint-disable react/self-closing-comp */
 
 import { useEffect } from 'react';
 import { useWalletStore } from '@/hooks/useWalletStore';

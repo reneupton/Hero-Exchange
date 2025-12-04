@@ -1,5 +1,7 @@
 'use client'
 
+/* eslint-disable react/self-closing-comp */
+
 import { signIn } from 'next-auth/react'
 import {isMobile} from 'react-device-detect';
 import React from 'react'

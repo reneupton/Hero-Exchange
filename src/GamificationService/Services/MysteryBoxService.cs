@@ -76,6 +76,16 @@ public class MysteryBoxService
         return await _context.Set<MysteryBox>().ToListAsync();
     }
 
+    public async Task<List<MysteryBox>> GetAllMysteryBoxesAsync()
+    {
+        return await GetAvailableBoxesAsync();
+    }
+
+    public async Task<MysteryBoxOpenResult> OpenMysteryBoxAsync(string userId, string boxId)
+    {
+        return await OpenBoxAsync(userId, boxId);
+    }
+
     public async Task<MysteryBoxOpenResult> OpenBoxAsync(string userId, string boxId)
     {
         var box = await _context.Set<MysteryBox>().FirstOrDefaultAsync(b => b.BoxId == boxId);
@@ -264,6 +274,16 @@ public class MysteryBoxService
         var item = items[_random.Next(items.Length)];
 
         return $"{prefix}{item}";
+    }
+
+    public async Task<List<MysteryBoxOpening>> GetUserMysteryBoxHistoryAsync(string userId, int limit = 20)
+    {
+        return await _context.Set<MysteryBoxOpening>()
+            .Where(o => o.UserId == userId)
+            .OrderByDescending(o => o.OpenedAt)
+            .Take(limit)
+            .Include(o => o.MysteryBox)
+            .ToListAsync();
     }
 }
 

@@ -45,7 +45,7 @@ export default function AchievementUnlock() {
         >
           <div className="rounded-lg p-6 relative overflow-hidden card-sheen border border-[var(--card-border)] shadow-[var(--shadow)] text-[var(--text)]">
             {/* Background glow effect */}
-            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-10 animate-shimmer"></div>
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-10 animate-shimmer" />
 
             {/* Close button */}
             <button

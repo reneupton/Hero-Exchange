@@ -123,36 +123,34 @@ export default function SellHeroModal({ isOpen, onClose, ownedHeroes, preselecte
         {/* Content */}
         <div className="p-5">
           {step === 'select' ? (
-            <>
-              {ownedHeroes.length === 0 ? (
-                <div className="text-center py-8">
-                  <p className="text-[var(--muted)]">You don&apos;t own any heroes to sell.</p>
-                  <p className="text-sm text-[var(--muted)] mt-2">Win auctions to add heroes to your collection.</p>
-                </div>
-              ) : (
-                <div className="space-y-2 max-h-[400px] overflow-auto">
-                  {ownedHeroes.map((hero) => (
-                    <button
-                      key={hero.id}
-                      onClick={() => handleSelectHero(hero)}
-                      className="w-full flex items-center gap-3 rounded-2xl border border-[var(--card-border)] bg-[rgba(26,32,48,0.65)] p-3 hover:border-[var(--accent)] hover:bg-[rgba(139,92,246,0.1)] transition-all text-left"
-                    >
-                      <div className="relative h-14 w-14 flex-shrink-0">
-                        <Image src={hero.cardImage} alt={hero.name} fill sizes="56px" className="object-contain rounded-xl" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="text-sm font-semibold text-[var(--text)] truncate">{hero.name}</div>
-                        <div className="text-xs text-[var(--muted)]">{hero.discipline} · {hero.rarity}</div>
-                      </div>
-                      <div className="flex items-center gap-1 text-[var(--accent-2)]">
-                        <Image src={goldIcon} alt="gold" width={16} height={16} className="object-contain" />
-                        <span className="text-sm font-semibold">{hero.gold.toLocaleString()}</span>
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              )}
-            </>
+            ownedHeroes.length === 0 ? (
+              <div className="text-center py-8">
+                <p className="text-[var(--muted)]">You don&apos;t own any heroes to sell.</p>
+                <p className="text-sm text-[var(--muted)] mt-2">Win auctions to add heroes to your collection.</p>
+              </div>
+            ) : (
+              <div className="space-y-2 max-h-[400px] overflow-auto">
+                {ownedHeroes.map((hero) => (
+                  <button
+                    key={hero.id}
+                    onClick={() => handleSelectHero(hero)}
+                    className="w-full flex items-center gap-3 rounded-2xl border border-[var(--card-border)] bg-[rgba(26,32,48,0.65)] p-3 hover:border-[var(--accent)] hover:bg-[rgba(139,92,246,0.1)] transition-all text-left"
+                  >
+                    <div className="relative h-14 w-14 flex-shrink-0">
+                      <Image src={hero.cardImage} alt={hero.name} fill sizes="56px" className="object-contain rounded-xl" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="text-sm font-semibold text-[var(--text)] truncate">{hero.name}</div>
+                      <div className="text-xs text-[var(--muted)]">{hero.discipline} · {hero.rarity}</div>
+                    </div>
+                    <div className="flex items-center gap-1 text-[var(--accent-2)]">
+                      <Image src={goldIcon} alt="gold" width={16} height={16} className="object-contain" />
+                      <span className="text-sm font-semibold">{hero.gold.toLocaleString()}</span>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )
           ) : selectedHero ? (
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
               {/* Hero Preview */}
@@ -183,7 +181,7 @@ export default function SellHeroModal({ isOpen, onClose, ownedHeroes, preselecte
                       min: { value: 0, message: 'Reserve price cannot be negative' },
                     }}
                     render={({ field, fieldState }) => (
-                      <>
+                      <div className="relative">
                         <div className="absolute left-3 top-1/2 -translate-y-1/2">
                           <Image src={goldIcon} alt="gold" width={18} height={18} className="object-contain" />
                         </div>
@@ -197,7 +195,7 @@ export default function SellHeroModal({ isOpen, onClose, ownedHeroes, preselecte
                         {fieldState.error && (
                           <p className="text-xs text-rose-400 mt-1">{fieldState.error.message}</p>
                         )}
-                      </>
+                      </div>
                     )}
                   />
                 </div>

@@ -77,7 +77,7 @@ export default async function Details({ params }: { params: { id: string } }) {
           <span className="badge badge-neutral-soft">{character.discipline}</span>
           <span className="badge badge-positive flex items-center gap-2">
             <Image src={goldIcon} alt="gold" width={18} height={18} className="object-contain" />
-            {character.gold.toLocaleString()}
+            {formatGold(data.currentHighBid ?? 0)}
           </span>
         </div>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">

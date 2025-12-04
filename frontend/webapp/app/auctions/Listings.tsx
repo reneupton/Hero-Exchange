@@ -1,10 +1,10 @@
 "use client";
 
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import AuctionCard from "./AuctionCard";
-import { Auction, PagedResult } from "@/types";
+import { Auction, OwnedHero } from "@/types";
 import AppPagination from "../components/AppPagination";
-import { getData } from "../actions/auctionActions";
+import { getData, getDetailedViewData } from "../actions/auctionActions";
 import Filters from "./Filters";
 import { useParamStore } from "@/hooks/useParamsStore";
 import { shallow } from "zustand/shallow";
@@ -14,12 +14,11 @@ import { useAuctionStore } from "@/hooks/useAuctionStore";
 import {isMobile} from 'react-device-detect';
 import { User } from "next-auth";
 import { useProfileStore } from "@/hooks/useProfileStore";
-import Link from "next/link";
 import Image from "next/image";
 import goldIcon from "@/public/gold2.png";
 import { numberWithCommas } from "../lib/numberWithComma";
 import { getLeaderboard, getMyProgress, summonHero } from "../actions/gamificationActions";
-import { usePathname, useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import LoadingSpinner from "../components/LoadingSpinner";
 import { characterCatalog, CharacterDefinition } from "../data/characterCatalog";
 import AnimatedHeroSprite from "../components/AnimatedHeroSprite";
@@ -30,7 +29,6 @@ import HeroDetailModal from "../components/HeroDetailModal";
 import DailySummonModal from "../components/DailySummonModal";
 import { FaTag } from "react-icons/fa";
 import { useSellModalStore } from "@/hooks/useSellModalStore";
-import { OwnedHero } from "@/types";
 import dailyBoxImg from "@/public/daily-box2.png";
 import toast from "react-hot-toast";
 
@@ -44,17 +42,19 @@ export default function Listings({ user }: Props) {
   const [summonedHero, setSummonedHero] = useState<{ hero: OwnedHero; gold: number; rarity: string } | null>(null);
   const [showSummonModal, setShowSummonModal] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(!user);
-  const pathname = usePathname();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const auctionIdFromUrl = searchParams.get('auction');
   const profile = useProfileStore((state) => state.profile);
   const leaderboard = useProfileStore((state) => state.leaderboard);
   const setProfile = useProfileStore((state) => state.setProfile);
   const setLeaderboard = useProfileStore((state) => state.setLeaderboard);
-  const hashToCharacter = (auctionId: string): CharacterDefinition => {
+  const [now, setNow] = useState(Date.now());
+  const hashToCharacter = useCallback((auctionId: string): CharacterDefinition => {
     const hash = Array.from(auctionId).reduce((acc, ch) => acc + ch.charCodeAt(0), 0);
     const idx = Math.abs(hash) % characterCatalog.length;
     return characterCatalog[idx];
-  };
+  }, []);
 
   const getRarityBorder = (rarity: string) => {
     switch (rarity) {
@@ -65,15 +65,71 @@ export default function Listings({ user }: Props) {
     }
   };
 
-  const ownedIds = new Set(
-    [
-      ...((profile?.ownedHeroes ?? []).map((h) => h.variantId ?? h.heroId) || []),
-      ...(profile?.recentPurchases ?? []),
-    ].filter(Boolean) as string[]
+  const normalizeImagePath = useCallback((path?: string) => {
+    if (!path) return "";
+    return path.toLowerCase().replace(/^https?:\/\/[^/]+/, "");
+  }, []);
+
+  const getImageKey = useCallback(
+    (path?: string) => normalizeImagePath(path).replace(/frame_\d+\.(png|jpg|jpeg|webp)$/i, ""),
+    [normalizeImagePath]
+  );
+
+  const allowedImageDomains = new Set([
+    "cdn.pixabay.com",
+    "people.com",
+    "res.cloudinary.com",
+    "images.unsplash.com",
+    "api.dicebear.com",
+  ]);
+
+  const normalizeCardImage = (img?: string, fallback?: string) => {
+    if (!img) return fallback ?? "";
+    if (img.startsWith("http")) {
+      try {
+        const host = new URL(img).hostname.toLowerCase();
+        if (!allowedImageDomains.has(host)) {
+          return fallback ?? "";
+        }
+      } catch {
+        return fallback ?? "";
+      }
+      return img;
+    }
+    return img.startsWith("/") ? img : `/${img}`;
+  };
+
+  const resolveAuctionCharacter = useCallback(
+    (auction: Auction): CharacterDefinition => {
+      const normalized = normalizeImagePath(auction.imageUrl);
+      const auctionKey = getImageKey(auction.imageUrl);
+      const matchByExactImage = characterCatalog.find(
+        (c) => normalizeImagePath(c.cardImage) === normalized
+      );
+      if (matchByExactImage) return matchByExactImage;
+
+      const matchByBasePath = characterCatalog.find(
+        (c) => getImageKey(c.cardImage) === auctionKey
+      );
+      if (matchByBasePath) return matchByBasePath;
+
+      return hashToCharacter(auction.id);
+    },
+    [getImageKey, hashToCharacter, normalizeImagePath]
+  );
+
+  const ownedIds = useMemo(
+    () =>
+      new Set(
+        [
+          ...((profile?.ownedHeroes ?? []).map((h) => h.variantId ?? h.heroId) || []),
+          ...(profile?.recentPurchases ?? []),
+        ].filter(Boolean) as string[]
+      ),
+    [profile?.ownedHeroes, profile?.recentPurchases]
   );
   const lastMystery = profile?.lastMysteryRewardAt ? new Date(profile.lastMysteryRewardAt).getTime() : 0;
-  const now = Date.now();
-  const windowMs = 5 * 1000; // 5 seconds for testing (was 24 * 60 * 60 * 1000)
+  const windowMs = 24 * 60 * 60 * 1000; // 24 hours
   const elapsed = Math.max(0, now - lastMystery);
   const remaining = Math.max(0, windowMs - elapsed);
   const canOpen = remaining === 0;
@@ -94,6 +150,8 @@ export default function Listings({ user }: Props) {
       filterBy: state.filterBy,
       seller: state.seller,
       winner: state.winner,
+      rarity: state.rarity,
+      discipline: state.discipline,
     }),
     shallow
   );
@@ -116,16 +174,99 @@ export default function Listings({ user }: Props) {
   const [sellPreselectedHero, setSellPreselectedHero] = useState<CharacterDefinition | null>(null);
   const [selectedCollectionHero, setSelectedCollectionHero] = useState<{ character: CharacterDefinition; acquiredAt?: string } | null>(null);
   const { isOpen: sellModalOpen, closeModal: closeSellModal, openModal: openSellModal } = useSellModalStore();
+  const [userLiveAuctions, setUserLiveAuctions] = useState<Auction[]>([]);
 
-  const combined = data.auctions.map((auction) => ({
-    auction,
-    character: hashToCharacter(auction.id),
-  }));
+  const refreshUserLiveAuctions = useCallback(async () => {
+    if (!user?.username) {
+      setUserLiveAuctions([]);
+      return;
+    }
+    try {
+      const query = qs.stringifyUrl({
+        url: "",
+        query: {
+          seller: user.username,
+          filterBy: "live",
+          pageNumber: 1,
+          pageSize: 100,
+          orderBy: "endingSoon",
+        },
+      });
+      const res = await getData(query);
+      if ((res as any)?.error) throw (res as any).error;
+      setUserLiveAuctions((res as any).results ?? []);
+    } catch {
+      setUserLiveAuctions([]);
+    }
+  }, [user?.username]);
+
+  const activeUserAuctions = useMemo(
+    () => userLiveAuctions.filter((a) => a.status?.toLowerCase() === "live"),
+    [userLiveAuctions]
+  );
+
+  const listedAuctionImages = useMemo(() => {
+    const keys: string[] = [];
+    activeUserAuctions.forEach((a) => {
+      const normalized = normalizeImagePath(a.imageUrl);
+      const baseKey = getImageKey(a.imageUrl);
+      if (normalized) keys.push(normalized);
+      if (baseKey) keys.push(baseKey);
+    });
+    return new Set(keys);
+  }, [activeUserAuctions, getImageKey, normalizeImagePath]);
+
+  const listedHeroIds = useMemo(
+    () =>
+      new Set(
+        activeUserAuctions
+          .map((auction) => resolveAuctionCharacter(auction)?.id)
+          .filter(Boolean) as string[]
+      ),
+    [activeUserAuctions, resolveAuctionCharacter]
+  );
+
+  const combined = useMemo(
+    () =>
+      data.auctions.map((auction) => ({
+        auction,
+        character: resolveAuctionCharacter(auction),
+      })),
+    [data.auctions, resolveAuctionCharacter]
+  );
+
+  const filteredCombined = useMemo(() => {
+    return combined.filter(({ auction, character }) => {
+      if (!character) return false;
+      if (params.rarity && params.rarity !== 'all' && character.rarity.toLowerCase() !== params.rarity.toLowerCase()) {
+        return false;
+      }
+      if (
+        params.discipline &&
+        params.discipline !== 'all' &&
+        character.discipline.toLowerCase() !== params.discipline.toLowerCase()
+      ) {
+        return false;
+      }
+      return true;
+    });
+  }, [combined, params.discipline, params.rarity]);
 
   // Use profile.ownedHeroes directly for display (has cardImage from backend)
   const ownedHeroesList = profile?.ownedHeroes ?? [];
   // Also keep catalog-based list for compatibility with SellHeroModal
   const ownedList = characterCatalog.filter((c) => ownedIds.has(c.id));
+
+  const sellableHeroes = useMemo(
+    () =>
+      ownedList.filter(
+        (c) =>
+          !listedHeroIds.has(c.id) &&
+          !listedAuctionImages.has(normalizeImagePath(c.cardImage)) &&
+          !listedAuctionImages.has(getImageKey(c.cardImage))
+      ),
+    [ownedList, listedHeroIds, listedAuctionImages, normalizeImagePath, getImageKey]
+  );
 
   const totalStats =
     profile?.totalHeroPower ??
@@ -148,10 +289,11 @@ export default function Listings({ user }: Props) {
       if (leaderboard && leaderboard.length > 0) {
         setLeaderboard(leaderboard);
       }
+      await refreshUserLiveAuctions();
     } catch {
       // ignore errors; keep current state
     }
-  }, [user, setProfile, setLeaderboard]);
+  }, [user, setProfile, setLeaderboard, refreshUserLiveAuctions]);
 
   const ensureDicebearPng = (url: string) => {
     if (!url.includes("dicebear.com")) return url;
@@ -195,13 +337,48 @@ export default function Listings({ user }: Props) {
         setProfile(result.profile);
       }
       if (result.hero) {
-        setReward({ heroName: result.hero.name, rarity: result.hero.rarity, gold: result.goldAwarded });
-        setSummonedHero({ hero: result.hero, gold: result.goldAwarded, rarity: result.rarity });
+        const summoned = result.hero;
+        const catalogHero =
+          characterCatalog.find((c) => c.id === summoned.variantId) ||
+          characterCatalog.find((c) => c.id.startsWith(summoned.heroId + "-")) ||
+          characterCatalog.find((c) => c.name.toLowerCase() === summoned.name.toLowerCase());
+        const fallbackCardImage =
+          "/pets/craftpix-net-919731-free-chibi-dark-oracle-character-sprites/dark_oracle_1/card/frame_0.png";
+        const preferredImage = catalogHero?.cardImage || summoned.cardImage || fallbackCardImage;
+        const cardImage = normalizeCardImage(preferredImage, fallbackCardImage);
+        const heroWithImage = { ...summoned, cardImage };
+
+        setReward({ heroName: heroWithImage.name, rarity: heroWithImage.rarity, gold: result.goldAwarded });
+        setSummonedHero({ hero: heroWithImage, gold: result.goldAwarded, rarity: result.rarity });
         setShowSummonModal(true);
-        toast.success(`${result.rarity} hero summoned: ${result.hero.name}!`, {
-          icon: result.rarity === "Legendary" ? "🌟" : result.rarity === "Epic" ? "💎" : result.rarity === "Rare" ? "✨" : "🎁",
-          duration: 4000,
-        });
+        toast.custom(
+          (t) => (
+            <div
+              className={`glass-panel border border-[var(--card-border)] rounded-2xl p-3 flex items-center gap-3 shadow-lg ${
+                t.visible ? "animate-enter" : "animate-leave"
+              }`}
+            >
+              <div className="relative h-12 w-12 rounded-xl overflow-hidden border border-[var(--card-border)] bg-[rgba(26,32,48,0.7)]">
+                {cardImage && (
+                  <Image
+                    src={cardImage}
+                    alt={heroWithImage.name}
+                    fill
+                    sizes="48px"
+                    className="object-contain"
+                  />
+                )}
+              </div>
+              <div className="flex flex-col">
+                <span className="text-xs uppercase text-[var(--muted)]">Daily Summon</span>
+                <span className="text-sm font-semibold text-[var(--text)]">
+                  {result.rarity} hero: {heroWithImage.name}
+                </span>
+              </div>
+            </div>
+          ),
+          { duration: 4000 }
+        );
       }
       await refreshProfileAndBoard();
     }
@@ -217,6 +394,34 @@ export default function Listings({ user }: Props) {
       setLoading(false);
     });
   }, [url, setData]);
+
+  useEffect(() => {
+    refreshUserLiveAuctions();
+  }, [refreshUserLiveAuctions]);
+
+  useEffect(() => {
+    if (auctionIdFromUrl && !loading) {
+      const auction = data.auctions.find((a) => a.id === auctionIdFromUrl);
+      if (auction) {
+        setSelected({ auction, character: resolveAuctionCharacter(auction) });
+      } else {
+        getDetailedViewData(auctionIdFromUrl)
+          .then((auction) => {
+            if (auction && auction.id) {
+              setSelected({ auction, character: resolveAuctionCharacter(auction) });
+            }
+          })
+          .catch(() => {});
+      }
+      router.replace("/", { scroll: false });
+    }
+  }, [auctionIdFromUrl, data.auctions, loading, resolveAuctionCharacter, router]);
+
+  useEffect(() => {
+    if (remaining <= 0) return;
+    const interval = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(interval);
+  }, [remaining]);
 
   useEffect(() => {
     refreshProfileAndBoard();
@@ -235,16 +440,6 @@ export default function Listings({ user }: Props) {
       document.removeEventListener("visibilitychange", onVisibility);
     };
   }, [user, refreshProfileAndBoard]);
-
-  // Also refresh when the route changes back to listings (Next.js client-side back)
-  useEffect(() => {
-    refreshProfileAndBoard();
-    const nav = performance.getEntriesByType("navigation")[0] as PerformanceNavigationTiming | undefined;
-    if (nav?.type === "back_forward") {
-      router.refresh();
-      refreshProfileAndBoard();
-    }
-  }, [pathname, refreshProfileAndBoard, router]);
 
   if (loading) return <LoadingSpinner label="Summoning auctions..." />;
 
@@ -285,7 +480,7 @@ export default function Listings({ user }: Props) {
       )}
 
       {user && (
-        <div className="grid grid-cols-3 gap-4 items-stretch mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 items-stretch mb-6">
           {/* Profile */}
           <div className="glass-panel ios-shadow rounded-3xl p-5 border border-[var(--accent-3)]/30 h-full flex flex-col gap-3">
             <div className="flex items-center gap-3">
@@ -318,20 +513,26 @@ export default function Listings({ user }: Props) {
                 </div>
               </div>
             </div>
-            <div className="flex items-center gap-3">
-              <div className="flex-1">
+            <div className="flex items-center gap-3 flex-wrap md:flex-nowrap">
+              <div className="flex-1 min-w-[200px]">
                 <div className="h-2 bg-white/60 rounded-full overflow-hidden">
                   <div
                     className="h-full bg-gradient-to-r from-[#5b7bff] via-[#9f7aea] to-[#7dd3fc]"
                     style={{ width: `${progressPct}%` }}
                   />
                 </div>
-                <div className="text-[11px] text-slate-500 mt-1">
-                Total stats {totalStats} • Progress to next {progressPct}%
+                <div className="text-[11px] text-slate-500 mt-1 flex flex-wrap gap-2 items-center">
+                  <span>Total stats {totalStats}</span>
+                  <span className="text-slate-400">|</span>
+                  <span>Progress to next {progressPct}%</span>
                 </div>
               </div>
-              <div className="text-[11px] text-slate-500">
-                Sold: {profile?.auctionsSold ?? 0} • Won: {profile?.auctionsWon ?? 0} • Bids: {profile?.bidsPlaced ?? 0}
+              <div className="text-[11px] text-slate-500 flex flex-wrap gap-2 min-w-[200px] justify-start md:justify-end">
+                <span>Sold: {profile?.auctionsSold ?? 0}</span>
+                <span className="text-slate-400">|</span>
+                <span>Won: {profile?.auctionsWon ?? 0}</span>
+                <span className="text-slate-400">|</span>
+                <span>Bids: {profile?.bidsPlaced ?? 0}</span>
               </div>
             </div>
             <div className="flex items-center justify-between rounded-2xl border border-white/60 bg-white/80 px-5 py-4 shadow-sm">
@@ -339,9 +540,9 @@ export default function Listings({ user }: Props) {
                 <span className="text-xs uppercase text-slate-500 tracking-wide">Daily Summons</span>
                 <span className="text-sm font-semibold text-slate-800">
                   {recentReward && !canOpen
-                    ? `+${recentReward.coins} • +${recentReward.xp} power`
-                  : reward
-                    ? `+${reward?.gold ?? 0} • ${reward?.heroName ?? ""} (${reward?.rarity ?? ""})`
+                    ? `+${recentReward.coins} | +${recentReward.xp} power`
+                    : reward
+                    ? `+${reward?.gold ?? 0} | ${reward?.heroName ?? ""} (${reward?.rarity ?? ""})`
                     : canOpen
                     ? "Tap to summon a hero!"
                     : "Come back tomorrow"
@@ -407,17 +608,17 @@ export default function Listings({ user }: Props) {
           <div className="glass-panel ios-shadow rounded-3xl p-5 border border-[var(--accent-3)]/30 h-full flex flex-col gap-3">
             <div className="flex items-center justify-between">
               <div className="text-sm font-semibold text-slate-700 uppercase tracking-wide">Daily quests</div>
-              <span className="badge badge-neutral">Reset daily</span>
+              <span className="badge badge-neutral">Resets daily</span>
             </div>
             <div className="space-y-2 flex-1">
               {[
                 { label: "Place 2 bids", progress: Math.min(2, profile?.bidsPlaced ?? 0), total: 2, reward: "+15 XP" },
                 { label: "Win an auction", progress: Math.min(1, profile?.auctionsWon ?? 0), total: 1, reward: "+50 XP" },
                 { label: "List a new item", progress: Math.min(1, profile?.auctionsCreated ?? 0), total: 1, reward: "+25 XP" },
-              ].map((quest, idx) => {
+              ].map((quest) => {
                 const pct = Math.min(100, Math.round((quest.progress / quest.total) * 100));
                 return (
-                  <div key={idx} className="rounded-2xl border border-white/60 bg-white/80 px-3 py-2">
+                  <div key={quest.label} className="rounded-2xl border border-white/60 bg-white/80 px-3 py-2">
                     <div className="flex items-center justify-between text-sm text-slate-800">
                       <span>{quest.label}</span>
                       <span className="text-xs text-slate-500">{quest.reward}</span>
@@ -517,6 +718,12 @@ export default function Listings({ user }: Props) {
                 const catalogHero = characterCatalog.find(c => c.id === hero.variantId)
                   || characterCatalog.find(c => c.id.startsWith(hero.heroId + '-'));
                 const cardImage = catalogHero?.cardImage || hero.cardImage || '';
+                const normalizedCardPath = normalizeImagePath(cardImage);
+                const baseCardKey = getImageKey(cardImage);
+                const heroIsListed =
+                  listedHeroIds.has(hero.variantId) ||
+                  listedAuctionImages.has(normalizedCardPath) ||
+                  listedAuctionImages.has(baseCardKey);
 
                 // Convert OwnedHero to CharacterDefinition for modal/sell compatibility
                 const heroAsCharacter: CharacterDefinition = {
@@ -538,29 +745,17 @@ export default function Listings({ user }: Props) {
                 <div
                   key={hero.variantId}
                   onClick={() => setSelectedCollectionHero({ character: heroAsCharacter, acquiredAt: hero.acquiredAt })}
-                  className={`rounded-xl border-2 bg-[rgba(26,32,48,0.65)] p-2 cursor-pointer transition-all duration-200 hover:scale-105 hover:brightness-110 ${getRarityBorder(hero.rarity)}`}
+                  className={`relative rounded-xl border-2 bg-[rgba(26,32,48,0.65)] p-2 cursor-pointer transition-all duration-200 hover:scale-95 hover:brightness-110 ${getRarityBorder(hero.rarity)}`}
                 >
+                  {heroIsListed && (
+                    <span className="absolute top-2 right-2 text-[10px] font-semibold px-2 py-1 rounded-lg bg-amber-500/15 border border-amber-400/60 text-amber-100 shadow-sm z-10">
+                      Listed
+                    </span>
+                  )}
                   <div className="relative w-full pb-[100%]">
                     {cardImage && (
                       <Image src={cardImage} alt={hero.name} fill sizes="100px" className="object-contain absolute inset-0" />
                     )}
-                  </div>
-                  <div className="flex items-center justify-between mt-1">
-                    <span className="flex items-center gap-1 text-xs text-[var(--accent-2)]">
-                      <Image src={goldIcon} alt="gold" width={12} height={12} className="object-contain" />
-                      {heroAsCharacter.gold.toLocaleString()}
-                    </span>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setSellPreselectedHero(heroAsCharacter);
-                        openSellModal();
-                      }}
-                      className="p-1 rounded-md hover:bg-[rgba(139,92,246,0.3)] text-[var(--accent)] transition-colors"
-                      title="Sell this hero"
-                    >
-                      <FaTag size={10} />
-                    </button>
                   </div>
                 </div>
               );
@@ -570,12 +765,12 @@ export default function Listings({ user }: Props) {
         </aside>
         <section className="flex flex-col gap-4">
           <Filters />
-          {data.totalCount === 0 ? (
+          {filteredCombined.length === 0 ? (
             <EmptyFilter showReset />
           ) : (
             <div className="flex flex-col gap-6 min-h-[520px]">
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-                {combined.map(({ auction, character }) => (
+                {filteredCombined.map(({ auction, character }) => (
                   <AuctionCard
                     auction={auction}
                     character={character}
@@ -641,7 +836,7 @@ export default function Listings({ user }: Props) {
                   <div className="flex items-center gap-3 flex-wrap">
                     <span className="badge badge-positive text-base flex items-center gap-2">
                       <Image src={goldIcon} alt="gold" width={18} height={18} className="object-contain" />
-                      {selected.character.gold.toLocaleString()}
+                      {numberWithCommas(selected.auction.currentHighBid ?? 0)}
                     </span>
                     <span className="badge badge-neutral-soft">{selected.character.discipline}</span>
                     <span className={`badge ${rarityTone[selected.character.rarity]}`}>{selected.character.rarity}</span>
@@ -686,7 +881,7 @@ export default function Listings({ user }: Props) {
           closeSellModal();
           setSellPreselectedHero(null);
         }}
-        ownedHeroes={ownedList}
+        ownedHeroes={sellableHeroes}
         preselectedHero={sellPreselectedHero}
       />
 

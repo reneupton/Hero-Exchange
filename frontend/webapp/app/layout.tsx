@@ -1,3 +1,4 @@
+/* eslint-disable react/self-closing-comp */
 import './globals.css'
 import type { Metadata } from 'next'
 import Navbar from './nav/Navbar'

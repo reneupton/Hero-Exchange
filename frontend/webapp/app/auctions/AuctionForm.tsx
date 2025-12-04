@@ -148,7 +148,8 @@ export default function AuctionForm({ auction }: Props) {
       router.push(`/auctions/details/${id}`);
     } catch (error: any) {
       toast.error(error.status + " " + error.message);
-      console.log(error);
+      // eslint-disable-next-line no-console
+      console.error(error);
     }
   }
 

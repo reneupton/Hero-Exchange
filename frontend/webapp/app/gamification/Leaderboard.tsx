@@ -1,4 +1,5 @@
-'use client';
+"use client";
+/* eslint-disable react/self-closing-comp, react/no-array-index-key */
 
 import { useEffect, useState } from 'react';
 import { gamificationService } from '../services/gamificationService';

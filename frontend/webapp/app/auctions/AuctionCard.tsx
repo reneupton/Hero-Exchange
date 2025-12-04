@@ -5,6 +5,7 @@ import { CharacterDefinition } from '../data/characterCatalog'
 import CountdownTimer from './CountdownTimer'
 import goldIcon from '@/public/gold2.png'
 import AnimatedHeroSprite from '../components/AnimatedHeroSprite'
+import { numberWithCommas } from '../lib/numberWithComma'
 
 type Props = {
   auction: Auction
@@ -53,22 +54,22 @@ export default function AuctionCard({ auction, character, owned, onSelect }: Pro
           ) : (
             <Image src={character.cardImage} alt={character.name} fill sizes="(max-width:768px) 100vw, (max-width:1200px) 50vw, 25vw" className="object-contain pointer-events-none" />
           )}
-          <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/0 to-black/60 pointer-events-none" />
-          <div className="absolute inset-0 flex flex-col justify-between p-3 pointer-events-none">
-            <div className="flex items-start justify-between gap-2">
-              <div className="flex items-start gap-2">
-                <span className={`badge ${rarityTone[character.rarity]}`}>{character.rarity}</span>
+            <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/0 to-black/60 pointer-events-none" />
+            <div className="absolute inset-0 flex flex-col justify-between p-3 pointer-events-none">
+              <div className="flex items-start justify-between gap-2">
+                <div className="flex items-start gap-2">
+                  <span className={`badge ${rarityTone[character.rarity]}`}>{character.rarity}</span>
+                </div>
                 {ownership && <span className="badge badge-neutral-soft">{ownership}</span>}
               </div>
-              <div className="badge badge-positive flex items-center gap-1 px-2 py-1 text-xs">
-                <Image src={goldIcon} alt="gold" width={16} height={16} className="object-contain" />
-                <span className="leading-none">{character.gold.toLocaleString()}</span>
+              <div className="flex justify-between items-end gap-2">
+                <CountdownTimer auctionEnd={auction.auctionEnd} />
+                <div className="badge badge-positive flex items-center gap-1 px-2 py-1 text-xs">
+                  <Image src={goldIcon} alt="gold" width={16} height={16} className="object-contain" />
+                  <span className="leading-none">{numberWithCommas(auction.currentHighBid ?? 0)}</span>
+                </div>
               </div>
             </div>
-            <div className="flex justify-start items-end">
-              <CountdownTimer auctionEnd={auction.auctionEnd} />
-            </div>
-          </div>
         </div>
         <div className="flex justify-between items-start mt-6 gap-4">
           <div className="flex flex-col">

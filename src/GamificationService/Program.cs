@@ -28,12 +28,17 @@ builder.Services.AddScoped<MysteryBoxService>();
 // MassTransit configuration
 builder.Services.AddMassTransit(x =>
 {
+    // Add consumers
+    x.AddConsumersFromNamespaceContaining<GamificationService.Consumers.AuctionFinishedConsumer>();
+
     x.AddEntityFrameworkOutbox<GamificationDbContext>(o =>
     {
         o.QueryDelay = TimeSpan.FromSeconds(10);
         o.UsePostgres();
         o.UseBusOutbox();
     });
+
+    x.SetEndpointNameFormatter(new KebabCaseEndpointNameFormatter("gamification", false));
 
     x.UsingRabbitMq((context, cfg) =>
     {

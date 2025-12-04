@@ -1,4 +1,6 @@
-'use client';
+"use client";
+
+/* eslint-disable react/no-array-index-key, react/self-closing-comp */
 
 import { useEffect, useState } from 'react';
 import { gamificationService } from '../services/gamificationService';
@@ -134,9 +136,9 @@ export default function ActivityFeed({
     return (
       <div className="bg-gray-900 rounded-xl p-6 shadow-2xl border border-gray-800">
         <div className="animate-pulse">
-          <div className="h-8 bg-gray-700 rounded w-48 mb-6"></div>
+          <div className="h-8 bg-gray-700 rounded w-48 mb-6" />
           {[...Array(8)].map((_, i) => (
-            <div key={i} className="h-20 bg-gray-800 rounded mb-2"></div>
+            <div key={`skeleton-${i}`} className="h-20 bg-gray-800 rounded mb-2" />
           ))}
         </div>
       </div>

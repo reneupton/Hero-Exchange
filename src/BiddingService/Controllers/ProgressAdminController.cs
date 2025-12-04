@@ -1,3 +1,5 @@
+#nullable enable
+
 using BiddingService.DTOs;
 using BiddingService.Models;
 using BiddingService.Services;

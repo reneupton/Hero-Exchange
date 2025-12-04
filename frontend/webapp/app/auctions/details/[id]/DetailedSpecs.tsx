@@ -59,7 +59,7 @@ export default function DetailedSpecs({auction, character}: Props) {
                         </Table.Cell>
                         <Table.Cell className="flex items-center gap-2">
                             <Image src={goldIcon} alt="gold" width={16} height={16} className="object-contain" />
-                            {character ? formatGold(character.gold) : '-'}
+                            {formatGold(auction.currentHighBid ?? 0)}
                         </Table.Cell>
                     </Table.Row>
                     <Table.Row className="bg-transparent">

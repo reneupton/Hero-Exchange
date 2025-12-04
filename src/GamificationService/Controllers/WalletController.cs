@@ -90,4 +90,40 @@ public class WalletController : ControllerBase
 
         return Ok(new { message = $"Successfully unstaked {request.Amount} FLOG" });
     }
+
+    [HttpPost("{userId}/add")]
+    public async Task<ActionResult> AddFlog(string userId, [FromBody] TransactionRequest request)
+    {
+        if (!Enum.TryParse<TransactionType>(request.TransactionType, true, out var transactionType))
+        {
+            return BadRequest(new { message = $"Invalid transaction type: {request.TransactionType}" });
+        }
+
+        var success = await _walletService.AddFlogAsync(userId, request.Amount, transactionType, request.Description);
+
+        if (!success)
+        {
+            return BadRequest(new { message = "Failed to add FLOG" });
+        }
+
+        return Ok(new { message = $"Successfully added {request.Amount} FLOG" });
+    }
+
+    [HttpPost("{userId}/deduct")]
+    public async Task<ActionResult> DeductFlog(string userId, [FromBody] TransactionRequest request)
+    {
+        if (!Enum.TryParse<TransactionType>(request.TransactionType, true, out var transactionType))
+        {
+            return BadRequest(new { message = $"Invalid transaction type: {request.TransactionType}" });
+        }
+
+        var success = await _walletService.DeductFlogAsync(userId, request.Amount, transactionType, request.Description);
+
+        if (!success)
+        {
+            return BadRequest(new { message = "Insufficient FLOG balance" });
+        }
+
+        return Ok(new { message = $"Successfully deducted {request.Amount} FLOG" });
+    }
 }

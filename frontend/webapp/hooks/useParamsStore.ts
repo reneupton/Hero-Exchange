@@ -10,6 +10,8 @@ type State = {
     filterBy: string
     seller?: string
     winner?: string
+    rarity?: string
+    discipline?: string
 }
 
 type Actions = {
@@ -27,7 +29,9 @@ const initialState: State = {
     orderBy: 'endingSoon',
     filterBy: 'live',
     seller: undefined,
-    winner: undefined
+    winner: undefined,
+    rarity: 'all',
+    discipline: 'all'
 }
 
 export const useParamStore = create<State & Actions>() ((set) => ({

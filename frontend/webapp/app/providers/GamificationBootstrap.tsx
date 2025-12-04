@@ -50,5 +50,5 @@ export default function GamificationBootstrap({ user, children }: Props) {
     };
   }, [user, pathname, setProfile, setLeaderboard]);
 
-  return <>{children}</>;
+  return children;
 }

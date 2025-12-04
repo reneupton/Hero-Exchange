@@ -20,6 +20,8 @@ public class GamificationDbContext : DbContext
     public DbSet<ActivityFeed> ActivityFeeds { get; set; }
     public DbSet<MysteryBox> MysteryBoxes { get; set; }
     public DbSet<MysteryBoxOpening> MysteryBoxOpenings { get; set; }
+    // UserInventory kept for gamification rewards (mystery boxes, achievements, etc.)
+    public DbSet<UserInventory> UserInventory { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -140,6 +142,15 @@ public class GamificationDbContext : DbContext
             entity.HasOne(e => e.MysteryBox)
                 .WithMany()
                 .HasForeignKey(e => e.MysteryBoxId);
+        });
+
+        // UserInventory configuration
+        modelBuilder.Entity<UserInventory>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => e.UserId);
+            entity.HasIndex(e => e.ItemId);
+            entity.Property(e => e.PurchasePrice).HasColumnType("decimal(18,2)");
         });
     }
 }

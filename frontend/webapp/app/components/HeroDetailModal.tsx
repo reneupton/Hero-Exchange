@@ -1,4 +1,5 @@
 "use client";
+/* eslint-disable react/no-array-index-key */
 
 import React from "react";
 import Image from "next/image";
@@ -133,7 +134,7 @@ export default function HeroDetailModal({ hero, onClose, acquiredAt, previousOwn
                 <div className="text-xs text-[var(--muted)] uppercase tracking-wide mb-2">Previous Owners</div>
                 <div className="flex flex-col gap-1">
                   {previousOwners.map((owner, idx) => (
-                    <div key={idx} className="text-sm text-[var(--text)] flex items-center gap-2">
+                    <div key={`${owner}-${idx}`} className="text-sm text-[var(--text)] flex items-center gap-2">
                       <span className="text-xs text-[var(--muted)]">#{previousOwners.length - idx}</span>
                       {owner}
                     </div>

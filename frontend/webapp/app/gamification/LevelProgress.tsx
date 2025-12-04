@@ -1,4 +1,5 @@
-'use client';
+"use client";
+/* eslint-disable react/self-closing-comp */
 
 import { useEffect } from 'react';
 import { useGamificationStore } from '@/hooks/useGamificationStore';
@@ -26,6 +27,17 @@ export default function LevelProgress({ userId, compact = false }: Props) {
     if (userId) {
       fetchUserGamification();
     }
+
+    // Listen for wallet update events (which also means XP updates)
+    const handleUpdate = () => {
+      fetchUserGamification();
+    };
+
+    window.addEventListener('walletUpdate', handleUpdate);
+
+    return () => {
+      window.removeEventListener('walletUpdate', handleUpdate);
+    };
   }, [userId, setUserGamification]);
 
   if (!userGamification) {
@@ -41,27 +53,27 @@ export default function LevelProgress({ userId, compact = false }: Props) {
 
   if (compact) {
     return (
-      <div className="bg-gray-800 rounded-lg p-3 border border-gray-700">
+      <div className="bg-gray-100 rounded-xl p-3 border border-gray-200">
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-2">
-            <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center text-white font-bold">
+            <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center text-white font-bold shadow-md animate-pulse">
               {userGamification.level}
             </div>
             <div>
-              <div className="text-sm font-semibold text-white">
+              <div className="text-sm font-semibold text-gray-900">
                 Level {userGamification.level}
               </div>
-              <div className="text-xs text-gray-400">{userGamification.title}</div>
+              <div className="text-xs text-gray-500">{userGamification.title}</div>
             </div>
           </div>
         </div>
-        <div className="relative h-2 bg-gray-700 rounded-full overflow-hidden">
+        <div className="relative h-2 bg-gray-200 rounded-full overflow-hidden">
           <div
-            className="absolute top-0 left-0 h-full bg-gradient-to-r from-purple-500 to-pink-500 transition-all duration-500"
+            className="absolute top-0 left-0 h-full bg-gradient-to-r from-purple-500 to-pink-500 shimmer transition-all duration-500"
             style={{ width: `${progressPercentage}%` }}
           ></div>
         </div>
-        <div className="text-xs text-gray-400 mt-1 text-right">
+        <div className="text-xs text-gray-500 mt-1 text-right">
           {userGamification.xp} / {userGamification.xpForNextLevel} XP
         </div>
       </div>
@@ -69,21 +81,21 @@ export default function LevelProgress({ userId, compact = false }: Props) {
   }
 
   return (
-    <div className="bg-gradient-to-br from-purple-900 to-pink-900 rounded-xl p-6 shadow-2xl border border-purple-700">
+    <div className="ios-card bg-gradient-to-br from-purple-50 to-pink-50 p-6">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h2 className="text-2xl font-bold text-white flex items-center gap-2">
-            <FaTrophy className="text-yellow-400" />
+          <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+            <FaTrophy className="text-yellow-500" />
             {userGamification.title}
           </h2>
-          <div className="text-purple-200 text-sm mt-1">
+          <div className="text-gray-600 text-sm mt-1">
             {userGamification.achievementCount} Achievements •{' '}
             {userGamification.completedQuestsCount} Quests Completed
           </div>
         </div>
-        <div className="w-20 h-20 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full flex items-center justify-center shadow-lg">
-          <span className="text-4xl font-bold text-white">
+        <div className="w-16 h-16 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full flex items-center justify-center shadow-lg quest-pulse">
+          <span className="text-3xl font-bold text-white">
             {userGamification.level}
           </span>
         </div>
@@ -92,17 +104,17 @@ export default function LevelProgress({ userId, compact = false }: Props) {
       {/* XP Progress */}
       <div className="mb-4">
         <div className="flex justify-between text-sm mb-2">
-          <span className="text-purple-200">
-            <FaStar className="inline mr-1 text-yellow-400" />
+          <span className="text-gray-600 flex items-center gap-1">
+            <FaStar className="text-yellow-500" />
             Experience Points
           </span>
-          <span className="text-white font-semibold">
+          <span className="text-gray-900 font-semibold">
             {userGamification.xp} / {userGamification.xpForNextLevel} XP
           </span>
         </div>
-        <div className="relative h-6 bg-purple-950 rounded-full overflow-hidden shadow-inner">
+        <div className="relative h-6 bg-gray-200 rounded-full overflow-hidden shadow-inner">
           <div
-            className="absolute top-0 left-0 h-full bg-gradient-to-r from-yellow-400 via-orange-500 to-pink-500 transition-all duration-500 flex items-center justify-end pr-3"
+            className="absolute top-0 left-0 h-full bg-gradient-to-r from-yellow-400 via-orange-500 to-pink-500 shimmer transition-all duration-500 flex items-center justify-end pr-3"
             style={{ width: `${Math.min(progressPercentage, 100)}%` }}
           >
             {progressPercentage > 10 && (
@@ -115,16 +127,16 @@ export default function LevelProgress({ userId, compact = false }: Props) {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 gap-4 mt-6">
-        <div className="bg-purple-950 bg-opacity-50 rounded-lg p-3 border border-purple-800">
-          <div className="text-purple-300 text-sm">Login Streak</div>
-          <div className="text-2xl font-bold text-white">
+      <div className="grid grid-cols-2 gap-3 mt-4">
+        <div className="bg-white rounded-xl p-3 border border-gray-200 shadow-sm">
+          <div className="text-gray-500 text-sm">Login Streak</div>
+          <div className="text-xl font-bold text-gray-900">
             {userGamification.streakDays} days
           </div>
         </div>
-        <div className="bg-purple-950 bg-opacity-50 rounded-lg p-3 border border-purple-800">
-          <div className="text-purple-300 text-sm">Next Level</div>
-          <div className="text-2xl font-bold text-yellow-400">
+        <div className="bg-white rounded-xl p-3 border border-gray-200 shadow-sm">
+          <div className="text-gray-500 text-sm">Next Level</div>
+          <div className="text-xl font-bold text-purple-600">
             {userGamification.xpForNextLevel - userGamification.xp} XP
           </div>
         </div>

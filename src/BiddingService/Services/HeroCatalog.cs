@@ -1,3 +1,5 @@
+#nullable enable
+
 using BiddingService.Models;
 
 namespace BiddingService.Services

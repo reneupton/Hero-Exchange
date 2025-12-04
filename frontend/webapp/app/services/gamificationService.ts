@@ -156,4 +156,133 @@ export const gamificationService = {
     if (!res.ok) throw new Error('Failed to open mystery box');
     return res.json();
   },
+
+  // Marketplace/Transaction endpoints
+  async purchaseItem(userId: string, itemId: string, price: number) {
+    const res = await fetch(`${BASE_URL}/api/wallet/${userId}/deduct`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        amount: price,
+        transactionType: 'Purchase',
+        description: `Purchased item ${itemId}`
+      }),
+    });
+    if (!res.ok) {
+      const error = await res.json();
+      throw new Error(error.message || 'Failed to purchase item');
+    }
+    return res.json();
+  },
+
+  async addFlog(userId: string, amount: number, transactionType: string, description: string) {
+    const res = await fetch(`${BASE_URL}/api/wallet/${userId}/add`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ amount, transactionType, description }),
+    });
+    if (!res.ok) throw new Error('Failed to add FLOG');
+    return res.json();
+  },
+
+  async deductFlog(userId: string, amount: number, transactionType: string, description: string) {
+    const res = await fetch(`${BASE_URL}/api/wallet/${userId}/deduct`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ amount, transactionType, description }),
+    });
+    if (!res.ok) {
+      const error = await res.json();
+      throw new Error(error.message || 'Insufficient FLOG balance');
+    }
+    return res.json();
+  },
+
+  // Marketplace endpoints
+  async getMarketplaceItems(category?: string, rarity?: string, minPrice?: number, maxPrice?: number, sortBy?: string) {
+    const params = new URLSearchParams();
+    if (category) params.append('category', category);
+    if (rarity) params.append('rarity', rarity);
+    if (minPrice !== undefined) params.append('minPrice', minPrice.toString());
+    if (maxPrice !== undefined) params.append('maxPrice', maxPrice.toString());
+    if (sortBy) params.append('sortBy', sortBy);
+
+    const res = await fetch(`${BASE_URL}/api/marketplace?${params.toString()}`);
+    if (!res.ok) throw new Error('Failed to fetch marketplace items');
+    return res.json();
+  },
+
+  async getMarketplaceItem(itemId: string) {
+    const res = await fetch(`${BASE_URL}/api/marketplace/${itemId}`);
+    if (!res.ok) throw new Error('Failed to fetch item');
+    return res.json();
+  },
+
+  async purchaseMarketplaceItem(userId: string, itemId: string) {
+    const res = await fetch(`${BASE_URL}/api/marketplace/${userId}/purchase`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ itemId }),
+    });
+    if (!res.ok) {
+      const error = await res.json();
+      throw new Error(error.message || 'Failed to purchase item');
+    }
+    return res.json();
+  },
+
+  async placeBid(userId: string, itemId: string, bidAmount: number) {
+    const res = await fetch(`${BASE_URL}/api/marketplace/${userId}/bid`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ itemId, bidAmount }),
+    });
+    if (!res.ok) {
+      const error = await res.json();
+      throw new Error(error.message || 'Failed to place bid');
+    }
+    return res.json();
+  },
+
+  async getUserInventory(userId: string) {
+    const res = await fetch(`${BASE_URL}/api/marketplace/${userId}/inventory`);
+    if (!res.ok) throw new Error('Failed to fetch inventory');
+    return res.json();
+  },
+
+  async listInventoryItem(userId: string, inventoryItemId: string, buyNowPrice: number, startingBidPrice?: number, durationDays = 7) {
+    const res = await fetch(`${BASE_URL}/api/marketplace/${userId}/list-inventory`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ inventoryItemId, buyNowPrice, startingBidPrice, durationDays }),
+    });
+    if (!res.ok) {
+      const error = await res.json();
+      throw new Error(error.message || 'Failed to list item');
+    }
+    return res.json();
+  },
+
+  async createMarketplaceListing(userId: string, listing: {
+    name: string;
+    description: string;
+    buyNowPrice: number;
+    startingBidPrice?: number;
+    emoji: string;
+    category: string;
+    rarity: string;
+    condition: string;
+    durationDays?: number;
+  }) {
+    const res = await fetch(`${BASE_URL}/api/marketplace/${userId}/create`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(listing),
+    });
+    if (!res.ok) {
+      const error = await res.json();
+      throw new Error(error.message || 'Failed to create listing');
+    }
+    return res.json();
+  },
 };

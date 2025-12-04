@@ -50,6 +50,13 @@ builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 builder.Services.AddHostedService<CheckAuctionFinished>();
 builder.Services.AddScoped<GrpcAuctionClient>();
 
+// Add GamificationClient with HttpClient
+builder.Services.AddHttpClient<GamificationClient>(client =>
+{
+    client.BaseAddress = new Uri(builder.Configuration["GamificationServiceUrl"] ?? "http://localhost:7005");
+    client.Timeout = TimeSpan.FromSeconds(30);
+});
+
 var app = builder.Build();
 
 app.UseAuthentication();

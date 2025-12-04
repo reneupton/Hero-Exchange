@@ -99,7 +99,7 @@ describe('AuctionCard', () => {
       expect(screen.getByText('Legendary')).toBeInTheDocument();
     });
 
-    it('should render the gold value with formatting', () => {
+    it('should render the current high bid with formatting', () => {
       render(
         <AuctionCard
           auction={mockAuction}
@@ -108,7 +108,8 @@ describe('AuctionCard', () => {
         />
       );
 
-      expect(screen.getByText('5,200')).toBeInTheDocument();
+      // The component displays auction.currentHighBid (150), not the character's gold value
+      expect(screen.getByText('150')).toBeInTheDocument();
     });
 
     it('should render character stats', () => {

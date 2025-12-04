@@ -1,4 +1,5 @@
-'use client';
+"use client";
+/* eslint-disable react/self-closing-comp */
 
 type Rarity = 'Common' | 'Uncommon' | 'Rare' | 'Epic' | 'Legendary';
 

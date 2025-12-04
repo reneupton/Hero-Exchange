@@ -27,5 +27,8 @@ public enum TransactionType
     MysteryBox,
     Staking,
     Unstaking,
-    AdReward
+    AdReward,
+    Bid,
+    BidRefund,
+    ItemListed
 }

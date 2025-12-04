@@ -1,9 +1,10 @@
 import { useParamStore } from '@/hooks/useParamsStore';
 import { Button } from 'flowbite-react';
-import React from 'react';
+import React, { useMemo } from 'react';
 import { AiOutlineClockCircle, AiOutlineSortAscending } from 'react-icons/ai';
 import { BsFillStopCircleFill, BsStopwatchFill } from 'react-icons/bs';
 import { GiFinishLine, GiFlame } from 'react-icons/gi';
+import { characterCatalog } from '../data/characterCatalog';
 
 const pageSizeButtons = [16, 32, 48];
 
@@ -24,6 +25,20 @@ export default function Filters() {
   const setParams = useParamStore((state) => state.setParams);
   const orderBy = useParamStore((state) => state.orderBy);
   const filterBy = useParamStore((state) => state.filterBy);
+  const rarity = useParamStore((state) => state.rarity);
+  const discipline = useParamStore((state) => state.discipline);
+
+  const rarityOptions = ['all', 'Common', 'Rare', 'Epic', 'Legendary'];
+  const rarityStyles: Record<string, string> = {
+    Common: 'border-slate-400/60 text-slate-100',
+    Rare: 'border-blue-400/70 text-blue-100',
+    Epic: 'border-purple-400/80 text-purple-100',
+    Legendary: 'border-amber-400/80 text-amber-100',
+  };
+  const classOptions = useMemo(
+    () => ['all', ...Array.from(new Set(characterCatalog.map((c) => c.discipline)))],
+    []
+  );
 
   return (
     <div className="flex flex-wrap justify-center lg:justify-between items-center gap-4 mb-6 px-4 py-3 rounded-2xl bg-[rgba(20,26,42,0.9)] backdrop-blur-md border border-[var(--card-border)] shadow-[0_12px_40px_rgba(0,0,0,0.35)]">
@@ -62,11 +77,42 @@ export default function Filters() {
       </div>
 
       <div className="flex items-center gap-2">
+        <span className="uppercase text-xs tracking-wide text-[var(--muted)] whitespace-nowrap">Rarity</span>
+        <Button.Group>
+          {rarityOptions.map((value) => (
+            <Button
+              key={`rarity-${value}`}
+              onClick={() => setParams({ rarity: value })}
+              color="light"
+              className={`chip bg-[rgba(46,58,80,0.8)] border-[var(--card-border)] ${rarity === value ? 'chip-active text-white' : ''} ${rarityStyles[value] ?? ''}`}
+            >
+              <span className="text-xs sm:text-sm capitalize">{value}</span>
+            </Button>
+          ))}
+        </Button.Group>
+      </div>
+
+      <div className="flex items-center gap-2">
+        <span className="uppercase text-xs tracking-wide text-[var(--muted)] whitespace-nowrap">Class</span>
+        <select
+          value={discipline}
+          onChange={(e) => setParams({ discipline: e.target.value })}
+          className="bg-[rgba(46,58,80,0.8)] text-[var(--text)] border border-[var(--card-border)] rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
+        >
+          {classOptions.map((cls) => (
+            <option key={cls} value={cls}>
+              {cls === 'all' ? 'All' : cls}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      <div className="flex items-center gap-2">
         <span className="uppercase text-xs tracking-wide text-[var(--muted)] whitespace-nowrap">Page size</span>
         <Button.Group>
-          {pageSizeButtons.map((value, i) => (
+          {pageSizeButtons.map((value) => (
             <Button
-              key={i}
+              key={`page-${value}`}
               onClick={() => setParams({ pageSize: value })}
               color="light"
               className={`chip bg-[rgba(46,58,80,0.8)] text-[var(--text)] border-[var(--card-border)] ${pageSize === value ? 'chip-active text-white' : ''} focus:ring-0 min-w-[3rem]`}
