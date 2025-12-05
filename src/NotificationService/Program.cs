@@ -48,3 +48,6 @@ app.UseCors("CorsPolicy");
 app.MapHub<NotificationHub>("/notifications");
 
 app.Run();
+
+// For integration testing
+public partial class Program { }

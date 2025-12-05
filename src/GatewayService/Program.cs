@@ -89,3 +89,6 @@ app.UseAuthorization();
 app.MapReverseProxy();
 
 app.Run();
+
+// For integration testing
+public partial class Program { }
