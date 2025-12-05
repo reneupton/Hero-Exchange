@@ -17,7 +17,7 @@ import { useProfileStore } from "@/hooks/useProfileStore";
 import Image from "next/image";
 import goldIcon from "@/public/gold2.png";
 import { numberWithCommas } from "../lib/numberWithComma";
-import { getLeaderboard, getMyProgress, summonHero } from "../actions/gamificationActions";
+import { claimAchievement as claimAchievementAction, getLeaderboard, getMyProgress, summonHero } from "../actions/gamificationActions";
 import { useRouter, useSearchParams } from "next/navigation";
 import LoadingSpinner from "../components/LoadingSpinner";
 import { characterCatalog, CharacterDefinition } from "../data/characterCatalog";
@@ -32,6 +32,7 @@ import { useSellModalStore } from "@/hooks/useSellModalStore";
 import dailyBoxImg from "@/public/daily-box2.png";
 import toast from "react-hot-toast";
 
+// Main marketplace page: lists auctions, handles filters, modals, and daily summon UI.
 type Props = {
   user: User | null;
 };
@@ -300,11 +301,62 @@ export default function Listings({ user }: Props) {
     }
   }, [user, setProfile, setLeaderboard, refreshUserLiveAuctions]);
 
+  // Load claimed achievements from backend profile
+  useEffect(() => {
+    if (profile?.claimedAchievements) {
+      setClaimedAchievements(new Set(profile.claimedAchievements));
+    }
+  }, [profile?.claimedAchievements]);
+
+  // Achievement tier definitions
+  const achievementTiers = useMemo(() => ({
+    bids: { tiers: [1, 10, 50, 100, 250, 500], title: "Bidder", rewards: ["Common", "Common", "Rare", "Rare", "Epic", "Legendary"] },
+    wins: { tiers: [1, 5, 25, 50, 100], title: "Collector", rewards: ["Common", "Rare", "Rare", "Epic", "Legendary"] },
+    created: { tiers: [1, 10, 50, 100, 200], title: "Trader", rewards: ["Common", "Rare", "Rare", "Epic", "Legendary"] },
+    sold: { tiers: [1, 10, 25, 75, 150], title: "Merchant", rewards: ["Common", "Rare", "Epic", "Epic", "Legendary"] },
+    heroes: { tiers: [1, 5, 15, 30, 50], title: "Collector", rewards: ["Common", "Rare", "Rare", "Epic", "Legendary"] },
+    level: { tiers: [5, 10, 15, 20, 25], title: "Veteran", rewards: ["Common", "Rare", "Epic", "Epic", "Legendary"] },
+    power: { tiers: [100, 500, 1500, 3000, 5000], title: "Powerhouse", rewards: ["Common", "Rare", "Rare", "Epic", "Legendary"] },
+  }), []);
+
+  const claimAchievement = useCallback((achievementId: string, rarity: string) => {
+    setAchievementReward({ achievementId, rarity });
+    setAchievementPhase("opening");
+    setShowAchievementModal(true);
+    setTimeout(() => setAchievementPhase("reveal"), 1500);
+  }, []);
+
+  const completeAchievementClaim = useCallback(async () => {
+    if (!achievementReward || !user?.username) return;
+
+    // Save achievement to backend
+    const updatedProfile = await claimAchievementAction(achievementReward.achievementId);
+    if (updatedProfile) {
+      setProfile(updatedProfile);
+      setClaimedAchievements(new Set(updatedProfile.claimedAchievements ?? []));
+    } else {
+      // Fallback: update local state even if backend fails
+      const newClaimed = new Set(claimedAchievements);
+      newClaimed.add(achievementReward.achievementId);
+      setClaimedAchievements(newClaimed);
+    }
+
+    setShowAchievementModal(false);
+    setAchievementReward(null);
+    // Trigger mystery box opening
+    summonHero(user.username).then((result) => {
+      if (result?.hero) {
+        setSummonedHero({ hero: result.hero, gold: result.goldAwarded, rarity: result.rarity });
+        setShowSummonModal(true);
+        if (result.profile) setProfile(result.profile);
+      }
+    }).catch(() => {});
+  }, [achievementReward, claimedAchievements, user?.username, setProfile]);
+
   const ensureDicebearPng = (url: string) => {
     if (!url.includes("dicebear.com")) return url;
-    const converted = url
-      .replace(/\/7\.x\/[^/]+\//, "/7.x/adventurer/")
-      .replace("/svg", "/png");
+    // Only ensure PNG format, don't override the style (database now stores adventurer style)
+    const converted = url.replace("/svg", "/png");
     if (converted.includes("?")) return converted;
     return `${converted}?seed=${user?.username ?? "avatar"}&backgroundType=gradientLinear&radius=40`;
   };
@@ -616,62 +668,125 @@ export default function Listings({ user }: Props) {
             <div className="flex items-center justify-between">
               <div className="text-sm font-semibold text-slate-700 uppercase tracking-wide">Achievements</div>
               <span className="badge badge-neutral">
-                {(() => {
-                  const achievements = [
-                    { progress: profile?.bidsPlaced ?? 0, total: 500 },
-                    { progress: profile?.auctionsWon ?? 0, total: 100 },
-                    { progress: profile?.auctionsCreated ?? 0, total: 200 },
-                    { progress: profile?.auctionsSold ?? 0, total: 150 },
-                    { progress: ownedHeroesList.length, total: 50 },
-                    { progress: profile?.level ?? 1, total: 25 },
-                    { progress: totalStats, total: 5000 },
-                  ];
-                  const completed = achievements.filter(a => a.progress >= a.total).length;
-                  return `${completed}/${achievements.length}`;
-                })()}
+                {claimedAchievements.size} claimed
               </span>
             </div>
             <div className="space-y-2 flex-1 overflow-auto pr-1 max-h-[220px] scrollbar-thin scrollbar-glow">
               {(() => {
-                const allAchievements = [
-                  { id: "bids", label: "Place 500 bids", progress: profile?.bidsPlaced ?? 0, total: 500, title: "Master Bidder", reward: "Rare Box" },
-                  { id: "wins", label: "Win 100 auctions", progress: profile?.auctionsWon ?? 0, total: 100, title: "Champion Collector", reward: "Epic Box" },
-                  { id: "created", label: "Create 200 auctions", progress: profile?.auctionsCreated ?? 0, total: 200, title: "Trading Legend", reward: "Legendary Box" },
-                  { id: "sold", label: "Sell 150 heroes", progress: profile?.auctionsSold ?? 0, total: 150, title: "Market Tycoon", reward: "Epic Box" },
-                  { id: "heroes", label: "Collect 50 heroes", progress: ownedHeroesList.length, total: 50, title: "Hero Hoarder", reward: "Rare Box" },
-                  { id: "level", label: "Reach level 25", progress: profile?.level ?? 1, total: 25, title: "Veteran", reward: "Legendary Box" },
-                  { id: "power", label: "Accumulate 5000 hero power", progress: totalStats, total: 5000, title: "Powerhouse", reward: "Epic Box" },
-                ];
-                const incomplete = allAchievements.filter(a => a.progress < a.total);
-                const complete = allAchievements.filter(a => a.progress >= a.total);
-                return [...incomplete, ...complete].map((achievement) => {
-                  const isComplete = achievement.progress >= achievement.total;
+                const progressValues: Record<string, number> = {
+                  bids: profile?.bidsPlaced ?? 0,
+                  wins: profile?.auctionsWon ?? 0,
+                  created: profile?.auctionsCreated ?? 0,
+                  sold: profile?.auctionsSold ?? 0,
+                  heroes: ownedHeroesList.length,
+                  level: profile?.level ?? 1,
+                  power: totalStats,
+                };
+                const labels: Record<string, (n: number) => string> = {
+                  bids: (n) => `Place ${n} bid${n !== 1 ? "s" : ""}`,
+                  wins: (n) => `Win ${n} auction${n !== 1 ? "s" : ""}`,
+                  created: (n) => `Create ${n} auction${n !== 1 ? "s" : ""}`,
+                  sold: (n) => `Sell ${n} hero${n !== 1 ? "es" : ""}`,
+                  heroes: (n) => `Collect ${n} hero${n !== 1 ? "es" : ""}`,
+                  level: (n) => `Reach level ${n}`,
+                  power: (n) => `Accumulate ${n.toLocaleString()} hero power`,
+                };
+                const tierNames: Record<string, string[]> = {
+                  bids: ["Novice Bidder", "Active Bidder", "Skilled Bidder", "Expert Bidder", "Master Bidder", "Legendary Bidder"],
+                  wins: ["First Win", "Collector", "Skilled Collector", "Expert Collector", "Champion Collector"],
+                  created: ["First Listing", "Trader", "Active Trader", "Expert Trader", "Trading Legend"],
+                  sold: ["First Sale", "Seller", "Merchant", "Expert Merchant", "Market Tycoon"],
+                  heroes: ["First Hero", "Hero Fan", "Hero Enthusiast", "Hero Expert", "Hero Hoarder"],
+                  level: ["Rising Star", "Experienced", "Skilled", "Elite", "Veteran"],
+                  power: ["Powered Up", "Growing Strong", "Mighty", "Powerful", "Powerhouse"],
+                };
+                const rarityTone: Record<string, string> = {
+                  Common: "bg-[rgba(255,255,255,0.08)] text-[var(--text)] border border-[var(--card-border)]",
+                  Rare: "bg-gradient-to-r from-[rgba(59,130,246,0.25)] to-[rgba(56,189,248,0.18)] text-[var(--text)] border border-[rgba(59,130,246,0.6)]",
+                  Epic: "bg-gradient-to-r from-[rgba(139,92,246,0.3)] to-[rgba(236,72,153,0.2)] text-[var(--text)] border border-[rgba(139,92,246,0.6)]",
+                  Legendary: "bg-gradient-to-r from-[rgba(245,158,11,0.35)] to-[rgba(249,115,22,0.25)] text-[var(--text)] border border-[rgba(245,158,11,0.65)]",
+                };
+                const rarityBorders: Record<string, string> = {
+                  Common: "border-slate-300/60",
+                  Rare: "border-blue-400/60",
+                  Epic: "border-purple-400/60",
+                  Legendary: "border-amber-400/60",
+                };
+                const currentAchievements: { id: string; category: string; tier: number; label: string; progress: number; total: number; title: string; reward: string; isComplete: boolean; isClaimed: boolean }[] = [];
+                (Object.keys(achievementTiers) as (keyof typeof achievementTiers)[]).forEach((category) => {
+                  const { tiers, rewards } = achievementTiers[category];
+                  const progress = progressValues[category];
+                  let currentTierIdx = 0;
+                  for (let i = 0; i < tiers.length; i++) {
+                    const achievementId = `${category}_${i}`;
+                    const isClaimed = claimedAchievements.has(achievementId);
+                    if (isClaimed) {
+                      currentTierIdx = i + 1;
+                    }
+                  }
+                  if (currentTierIdx < tiers.length) {
+                    const tierIdx = currentTierIdx;
+                    const total = tiers[tierIdx];
+                    const reward = rewards[tierIdx];
+                    const achievementId = `${category}_${tierIdx}`;
+                    const isComplete = progress >= total;
+                    const isClaimed = claimedAchievements.has(achievementId);
+                    currentAchievements.push({
+                      id: achievementId,
+                      category,
+                      tier: tierIdx,
+                      label: labels[category](total),
+                      progress,
+                      total,
+                      title: tierNames[category][tierIdx],
+                      reward,
+                      isComplete,
+                      isClaimed,
+                    });
+                  }
+                });
+                const claimable = currentAchievements.filter(a => a.isComplete && !a.isClaimed);
+                const inProgress = currentAchievements.filter(a => !a.isComplete);
+                return [...claimable, ...inProgress].map((achievement) => {
                   const pct = Math.min(100, Math.round((achievement.progress / achievement.total) * 100));
+                  const canClaim = achievement.isComplete && !achievement.isClaimed;
                   return (
                     <div
                       key={achievement.id}
                       className={`rounded-2xl border px-3 py-2 transition-all ${
-                        isComplete
-                          ? "border-emerald-400/60 bg-emerald-50/80"
+                        canClaim
+                          ? `${rarityBorders[achievement.reward]} bg-gradient-to-r from-amber-50/90 to-orange-50/90 animate-pulse`
                           : "border-white/60 bg-white/80"
                       }`}
                     >
                       <div className="flex items-center justify-between text-sm text-slate-800">
-                        <span className={isComplete ? "line-through text-slate-500" : ""}>
+                        <span className="flex items-center gap-1.5">
+                          <span className="text-xs text-slate-400">Tier {achievement.tier + 1}</span>
                           {achievement.label}
                         </span>
-                        <span className={`text-xs ${isComplete ? "text-emerald-600 font-semibold" : "text-amber-600"}`}>
-                          {isComplete ? achievement.title : achievement.reward}
+                        <span className={`badge text-xs ${rarityTone[achievement.reward]}`}>
+                          {achievement.reward}
                         </span>
                       </div>
                       <div className="mt-1 h-2 bg-white/60 rounded-full overflow-hidden">
                         <div
-                          className={`h-full ${isComplete ? "bg-emerald-400" : "bg-gradient-to-r from-[#5b7bff] to-[#9f7aea]"}`}
+                          className={`h-full transition-all ${canClaim ? "bg-gradient-to-r from-amber-400 to-orange-400" : "bg-gradient-to-r from-[#5b7bff] to-[#9f7aea]"}`}
                           style={{ width: `${pct}%` }}
                         />
                       </div>
-                      <div className="text-[11px] text-slate-500 mt-1">
-                        {isComplete ? "Completed!" : `${achievement.progress}/${achievement.total}`}
+                      <div className="flex items-center justify-between mt-1">
+                        <span className="text-[11px] text-slate-500">
+                          {achievement.progress}/{achievement.total}
+                        </span>
+                        {canClaim && (
+                          <button
+                            onClick={() => claimAchievement(achievement.id, achievement.reward)}
+                            className="text-xs font-semibold text-amber-600 hover:text-amber-700 flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-100/80 hover:bg-amber-200/80 transition-colors"
+                          >
+                            <Image src={dailyBoxImg} alt="box" width={14} height={14} className="object-contain" />
+                            Claim!
+                          </button>
+                        )}
                       </div>
                     </div>
                   );
@@ -936,6 +1051,102 @@ export default function Listings({ user }: Props) {
         acquiredAt={selectedCollectionHero?.acquiredAt}
         previousOwners={[]}
       />
+
+      {/* Achievement Claim Modal */}
+      {showAchievementModal && achievementReward && (
+        <div
+          className="fixed inset-0 bg-black/85 backdrop-blur-md z-50 flex items-center justify-center p-4"
+          onClick={achievementPhase === "reveal" ? completeAchievementClaim : undefined}
+        >
+          <div
+            className={`relative max-w-sm w-full transition-all duration-700 ${
+              achievementPhase === "opening" ? "scale-90 opacity-0" : "scale-100 opacity-100"
+            }`}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {achievementPhase === "opening" && (
+              <div className="flex flex-col items-center justify-center py-20">
+                <div className="relative w-32 h-32 animate-pulse">
+                  <Image
+                    src={dailyBoxImg}
+                    alt="Mystery Box"
+                    fill
+                    sizes="128px"
+                    className="object-contain animate-bounce"
+                  />
+                </div>
+                <div className="mt-6 text-white text-xl font-bold animate-pulse">
+                  Opening {achievementReward.rarity} Box...
+                </div>
+                <div className="flex items-center justify-center gap-2 mt-4">
+                  <div className="w-3 h-3 bg-amber-400 rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
+                  <div className="w-3 h-3 bg-amber-400 rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
+                  <div className="w-3 h-3 bg-amber-400 rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
+                </div>
+              </div>
+            )}
+
+            {achievementPhase === "reveal" && (
+              <div className={`glass-panel rounded-3xl p-6 border-2 ${
+                achievementReward.rarity === "Legendary" ? "border-amber-400/80 shadow-[0_0_100px_rgba(251,191,36,0.7)]" :
+                achievementReward.rarity === "Epic" ? "border-purple-400/70 shadow-[0_0_80px_rgba(168,85,247,0.6)]" :
+                achievementReward.rarity === "Rare" ? "border-blue-400/70 shadow-[0_0_60px_rgba(59,130,246,0.5)]" :
+                "border-slate-400/60"
+              }`}>
+                <div className="text-center mb-6">
+                  <span className={`text-3xl font-black uppercase tracking-wider ${
+                    achievementReward.rarity === "Legendary" ? "text-amber-300" :
+                    achievementReward.rarity === "Epic" ? "text-purple-300" :
+                    achievementReward.rarity === "Rare" ? "text-blue-300" :
+                    "text-slate-300"
+                  }`}>
+                    {achievementReward.rarity} Box
+                  </span>
+                  <span className="block text-sm text-[var(--muted)] mt-1">Achievement Unlocked!</span>
+                </div>
+
+                <div className="relative w-32 h-32 mx-auto mb-6">
+                  <Image
+                    src={dailyBoxImg}
+                    alt="Mystery Box"
+                    fill
+                    sizes="128px"
+                    className="object-contain"
+                  />
+                </div>
+
+                <p className="text-center text-[var(--text)] mb-6">
+                  Click to open your mystery box and receive a hero!
+                </p>
+
+                <button
+                  onClick={completeAchievementClaim}
+                  className="w-full soft-button py-3 rounded-xl justify-center text-base font-semibold"
+                >
+                  Open Box
+                </button>
+              </div>
+            )}
+          </div>
+
+          {achievementReward.rarity === "Legendary" && achievementPhase === "reveal" && (
+            <div className="absolute inset-0 pointer-events-none overflow-hidden">
+              {[...Array(20)].map((_, i) => (
+                <div
+                  key={i}
+                  className="absolute w-2 h-2 bg-amber-400 rounded-full animate-ping"
+                  style={{
+                    left: `${Math.random() * 100}%`,
+                    top: `${Math.random() * 100}%`,
+                    animationDelay: `${Math.random() * 2}s`,
+                    animationDuration: `${1 + Math.random() * 2}s`,
+                  }}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       <DailySummonModal
         isOpen={showSummonModal}

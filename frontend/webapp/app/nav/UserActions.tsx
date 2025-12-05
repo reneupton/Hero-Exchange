@@ -1,3 +1,4 @@
+// User dropdown for navigating personal auctions, selling, and signing out.
 'use client'
 import { useParamStore } from "@/hooks/useParamsStore";
 import { Dropdown } from "flowbite-react";
@@ -27,9 +28,8 @@ export default function UserActions({user} : Props) {
 
   const ensureDicebearPng = (url: string) => {
     if (!url.includes("dicebear.com")) return url;
-    const converted = url
-      .replace(/\/7\.x\/[^/]+\//, "/7.x/adventurer/")
-      .replace("/svg", "/png");
+    // Only ensure PNG format, don't override the style (database now stores adventurer style)
+    const converted = url.replace("/svg", "/png");
     if (converted.includes("?")) return converted;
     return `${converted}?seed=${user?.username ?? "avatar"}&backgroundType=gradientLinear&radius=40`;
   };

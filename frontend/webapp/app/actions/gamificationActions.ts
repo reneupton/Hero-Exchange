@@ -1,3 +1,4 @@
+// Server actions for retrieving and mutating player progress and mystery box state from the backend.
 'use server'
 
 import { OwnedHero, PlayerProfile } from "@/types";
@@ -10,6 +11,9 @@ export type SummonResult = {
   rarity: string;
 };
 
+/**
+ * Fetches the current user's progress profile.
+ */
 export async function getMyProgress(): Promise<PlayerProfile | null> {
   try {
     const res = await fetchWrapper.get("progress/me");
@@ -20,6 +24,9 @@ export async function getMyProgress(): Promise<PlayerProfile | null> {
   }
 }
 
+/**
+ * Applies a gamification action (bid/list/sale/purchase/daily-login) and returns the updated profile.
+ */
 export async function awardGamification(action: string, amount?: number): Promise<PlayerProfile | null> {
   try {
     const res = await fetchWrapper.post("progress/award", { action, amount });
@@ -30,6 +37,9 @@ export async function awardGamification(action: string, amount?: number): Promis
   }
 }
 
+/**
+ * Retrieves the leaderboard from the backend.
+ */
 export async function getLeaderboard(): Promise<PlayerProfile[]> {
   try {
     const res = await fetchWrapper.get("progress/leaderboard");
@@ -40,6 +50,9 @@ export async function getLeaderboard(): Promise<PlayerProfile[]> {
   }
 }
 
+/**
+ * Opens the daily mystery box for the current user.
+ */
 export async function openMysteryBox(): Promise<SummonResult | null> {
   try {
     const res = await fetchWrapper.post("progress/mystery", {});
@@ -56,6 +69,9 @@ export async function openMysteryBox(): Promise<SummonResult | null> {
   }
 }
 
+/**
+ * (Legacy) Opens the mystery box; username is unused but retained for compatibility.
+ */
 export async function summonHero(username: string): Promise<SummonResult | null> {
   try {
     const res = await fetchWrapper.post("progress/mystery", {});
@@ -67,6 +83,19 @@ export async function summonHero(username: string): Promise<SummonResult | null>
       goldAwarded: result.goldAwarded,
       rarity: result.rarity,
     };
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Claims an achievement reward for the current user.
+ */
+export async function claimAchievement(achievementId: string): Promise<PlayerProfile | null> {
+  try {
+    const res = await fetchWrapper.post("progress/claim-achievement", { achievementId });
+    if ((res as any)?.error) return null;
+    return res as PlayerProfile;
   } catch {
     return null;
   }

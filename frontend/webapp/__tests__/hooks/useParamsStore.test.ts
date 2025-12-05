@@ -90,6 +90,23 @@ describe('useParamsStore', () => {
 
       expect(result.current.winner).toBe('winnerUser');
     });
+
+    it('should clear seller and winner when not provided in new params', () => {
+      const { result } = renderHook(() => useParamStore());
+
+      act(() => {
+        result.current.setParams({ seller: 'alice', winner: 'bob' });
+      });
+      expect(result.current.seller).toBe('alice');
+      expect(result.current.winner).toBe('bob');
+
+      act(() => {
+        result.current.setParams({ filterBy: 'live' });
+      });
+
+      expect(result.current.seller).toBeUndefined();
+      expect(result.current.winner).toBeUndefined();
+    });
   });
 
   describe('reset', () => {

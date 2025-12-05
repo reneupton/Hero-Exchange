@@ -1,3 +1,4 @@
+// Shared TypeScript types for auctions, heroes, and user profiles used across the webapp.
 export type PagedResult<T> = {
     results: T[]
     pageCount: number
@@ -94,6 +95,7 @@ export type PagedResult<T> = {
     recentSales?: string[]
     heldBids?: { auctionId: string; amount: number }[]
     ownedHeroes?: OwnedHero[]
+    claimedAchievements?: string[]
   }
 
   export type OwnedHero = {
