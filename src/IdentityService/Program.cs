@@ -1,3 +1,4 @@
+// Entry point for IdentityService: configures IdentityServer, logging, seeding, and hosting pipeline.
 ﻿using IdentityService;
 using Npgsql;
 using Polly;

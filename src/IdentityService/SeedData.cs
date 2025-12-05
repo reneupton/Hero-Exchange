@@ -10,6 +10,9 @@ namespace IdentityService;
 
 public class SeedData
 {
+    /// <summary>
+    /// Ensures core demo users (alice, bob, guest) exist with required claims and seeded passwords.
+    /// </summary>
     public static void EnsureSeedData(WebApplication app)
     {
         using (var scope = app.Services.GetRequiredService<IServiceScopeFactory>().CreateScope())

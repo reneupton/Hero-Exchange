@@ -4,6 +4,9 @@ namespace IdentityService;
 
 public static class Config
 {
+    /// <summary>
+    /// Builds allowed redirect URIs from config, including primary client and additional/local URIs.
+    /// </summary>
     private static ICollection<string> GetRedirectUris(IConfiguration config)
     {
         var uris = new List<string>();
