@@ -106,7 +106,7 @@ public class Index : PageModel
         var context = await _interaction.GetAuthorizationContextAsync(Input.ReturnUrl);
 
         // the user clicked the "cancel" button
-        if (Input.Button != "login")
+        if (Input.Button == "cancel")
         {
             if (context != null)
             {
@@ -130,6 +130,50 @@ public class Index : PageModel
                 // since we don't have a valid context, then we just go back to the home page
                 return Redirect("~/");
             }
+        }
+
+        // Guest shortcut: no password required, ensure guest exists then sign in
+        if (Input.Button == "guest")
+        {
+            var guestPassword = Environment.GetEnvironmentVariable("GUEST_PASSWORD") ?? "GuestPassword123!";
+            var guest = await _userManager.FindByNameAsync("guest");
+            if (guest == null)
+            {
+                guest = new ApplicationUser
+                {
+                    UserName = "guest",
+                    Email = "guest@heroexchange.demo",
+                    EmailConfirmed = true
+                };
+                var createResult = await _userManager.CreateAsync(guest, guestPassword);
+                if (createResult.Succeeded)
+                {
+                    await _userManager.AddClaimsAsync(guest, new Claim[]
+                    {
+                        new Claim(JwtClaimTypes.Name, "Guest User")
+                    });
+                }
+            }
+
+            if (guest != null)
+            {
+                await _signInManager.SignInAsync(guest, isPersistent: false);
+                await _events.RaiseAsync(new UserLoginSuccessEvent(guest.UserName, guest.Id, guest.UserName, clientId: context?.Client.ClientId));
+
+                if (context != null)
+                {
+                    return context.IsNativeClient() ? this.LoadingPage(Input.ReturnUrl) : Redirect(Input.ReturnUrl);
+                }
+
+                if (!string.IsNullOrEmpty(Input.ReturnUrl) && Url.IsLocalUrl(Input.ReturnUrl))
+                {
+                    return Redirect(Input.ReturnUrl);
+                }
+
+                return Redirect("~/");
+            }
+
+            ModelState.AddModelError(string.Empty, "Guest account unavailable.");
         }
 
         if (ModelState.IsValid)

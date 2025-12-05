@@ -16,10 +16,10 @@
                     </div>
 
                     <div class="card-body">
-                        <form asp-page="/Account/Login/Index" id="loginForm">
+                        <form asp-page="/Account/Login/Index" id="loginForm" method="post">
                             <input type="hidden" asp-for="Input.ReturnUrl" />
 
-                            <button type="button" class="btn btn-guest" id="guestLoginBtn">
+                            <button type="submit" class="btn btn-guest" name="Input.Button" value="guest">
                                 Continue as Guest
                             </button>
 
@@ -97,25 +97,3 @@
         }
     </div>
 </div>
-
-@section scripts {
-<script>
-    document.getElementById('guestLoginBtn').addEventListener('click', function() {
-        var usernameInput = document.getElementById('Input_Username');
-        var passwordInput = document.getElementById('Input_Password');
-        var form = document.getElementById('loginForm');
-
-        usernameInput.value = 'guest';
-        passwordInput.value = 'GuestPassword123!';
-
-        // Create a hidden input for the button value
-        var buttonInput = document.createElement('input');
-        buttonInput.type = 'hidden';
-        buttonInput.name = 'Input.Button';
-        buttonInput.value = 'login';
-        form.appendChild(buttonInput);
-
-        form.submit();
-    });
-</script>
-}
