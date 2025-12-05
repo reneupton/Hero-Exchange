@@ -39,11 +39,23 @@ export const useParamStore = create<State & Actions>() ((set) => ({
 
     setParams: (newParams: Partial<State>) => {
         set((state) => {
-            if(newParams.pageNumber) {
-                return {...state, pageNumber: newParams.pageNumber}
-            } else {
-                return {...state, ...newParams, pageNumber: 1}
+            // merge params and bump back to first page unless caller explicitly set pageNumber
+            const hasPageNumber = typeof newParams.pageNumber === "number";
+            let next = {
+                ...state,
+                ...newParams,
+                pageNumber: hasPageNumber ? newParams.pageNumber! : 1,
+            };
+
+            // If caller didn't explicitly set seller/winner, clear them so stale filters don't stick
+            if (!("seller" in newParams)) {
+                next = { ...next, seller: undefined };
             }
+            if (!("winner" in newParams)) {
+                next = { ...next, winner: undefined };
+            }
+
+            return next;
         })
     },
     
