@@ -42,6 +42,10 @@ export default function Listings({ user }: Props) {
   const [summonedHero, setSummonedHero] = useState<{ hero: OwnedHero; gold: number; rarity: string } | null>(null);
   const [showSummonModal, setShowSummonModal] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(!user);
+  const [claimedAchievements, setClaimedAchievements] = useState<Set<string>>(new Set());
+  const [achievementReward, setAchievementReward] = useState<{ achievementId: string; rarity: string } | null>(null);
+  const [showAchievementModal, setShowAchievementModal] = useState(false);
+  const [achievementPhase, setAchievementPhase] = useState<"opening" | "reveal">("opening");
   const router = useRouter();
   const searchParams = useSearchParams();
   const auctionIdFromUrl = searchParams.get('auction');
@@ -611,30 +615,68 @@ export default function Listings({ user }: Props) {
           <div className="glass-panel ios-shadow rounded-3xl p-5 border border-[var(--accent-3)]/30 h-full flex flex-col gap-3">
             <div className="flex items-center justify-between">
               <div className="text-sm font-semibold text-slate-700 uppercase tracking-wide">Achievements</div>
-              <span className="badge badge-neutral">Lifetime</span>
+              <span className="badge badge-neutral">
+                {(() => {
+                  const achievements = [
+                    { progress: profile?.bidsPlaced ?? 0, total: 500 },
+                    { progress: profile?.auctionsWon ?? 0, total: 100 },
+                    { progress: profile?.auctionsCreated ?? 0, total: 200 },
+                    { progress: profile?.auctionsSold ?? 0, total: 150 },
+                    { progress: ownedHeroesList.length, total: 50 },
+                    { progress: profile?.level ?? 1, total: 25 },
+                    { progress: totalStats, total: 5000 },
+                  ];
+                  const completed = achievements.filter(a => a.progress >= a.total).length;
+                  return `${completed}/${achievements.length}`;
+                })()}
+              </span>
             </div>
-            <div className="space-y-2 flex-1">
-              {[
-                { label: "Bids placed", progress: profile?.bidsPlaced ?? 0, total: 100, milestone: "Master Bidder" },
-                { label: "Auctions won", progress: profile?.auctionsWon ?? 0, total: 25, milestone: "Champion Collector" },
-                { label: "Auctions created", progress: profile?.auctionsCreated ?? 0, total: 50, milestone: "Trading Legend" },
-              ].map((achievement) => {
-                const pct = Math.min(100, Math.round((achievement.progress / achievement.total) * 100));
-                return (
-                  <div key={achievement.label} className="rounded-2xl border border-white/60 bg-white/80 px-3 py-2">
-                    <div className="flex items-center justify-between text-sm text-slate-800">
-                      <span>{achievement.label}</span>
-                      <span className="text-xs text-slate-500">{achievement.milestone}</span>
+            <div className="space-y-2 flex-1 overflow-auto pr-1 max-h-[220px] scrollbar-thin scrollbar-glow">
+              {(() => {
+                const allAchievements = [
+                  { id: "bids", label: "Place 500 bids", progress: profile?.bidsPlaced ?? 0, total: 500, title: "Master Bidder", reward: "Rare Box" },
+                  { id: "wins", label: "Win 100 auctions", progress: profile?.auctionsWon ?? 0, total: 100, title: "Champion Collector", reward: "Epic Box" },
+                  { id: "created", label: "Create 200 auctions", progress: profile?.auctionsCreated ?? 0, total: 200, title: "Trading Legend", reward: "Legendary Box" },
+                  { id: "sold", label: "Sell 150 heroes", progress: profile?.auctionsSold ?? 0, total: 150, title: "Market Tycoon", reward: "Epic Box" },
+                  { id: "heroes", label: "Collect 50 heroes", progress: ownedHeroesList.length, total: 50, title: "Hero Hoarder", reward: "Rare Box" },
+                  { id: "level", label: "Reach level 25", progress: profile?.level ?? 1, total: 25, title: "Veteran", reward: "Legendary Box" },
+                  { id: "power", label: "Accumulate 5000 hero power", progress: totalStats, total: 5000, title: "Powerhouse", reward: "Epic Box" },
+                ];
+                const incomplete = allAchievements.filter(a => a.progress < a.total);
+                const complete = allAchievements.filter(a => a.progress >= a.total);
+                return [...incomplete, ...complete].map((achievement) => {
+                  const isComplete = achievement.progress >= achievement.total;
+                  const pct = Math.min(100, Math.round((achievement.progress / achievement.total) * 100));
+                  return (
+                    <div
+                      key={achievement.id}
+                      className={`rounded-2xl border px-3 py-2 transition-all ${
+                        isComplete
+                          ? "border-emerald-400/60 bg-emerald-50/80"
+                          : "border-white/60 bg-white/80"
+                      }`}
+                    >
+                      <div className="flex items-center justify-between text-sm text-slate-800">
+                        <span className={isComplete ? "line-through text-slate-500" : ""}>
+                          {achievement.label}
+                        </span>
+                        <span className={`text-xs ${isComplete ? "text-emerald-600 font-semibold" : "text-amber-600"}`}>
+                          {isComplete ? achievement.title : achievement.reward}
+                        </span>
+                      </div>
+                      <div className="mt-1 h-2 bg-white/60 rounded-full overflow-hidden">
+                        <div
+                          className={`h-full ${isComplete ? "bg-emerald-400" : "bg-gradient-to-r from-[#5b7bff] to-[#9f7aea]"}`}
+                          style={{ width: `${pct}%` }}
+                        />
+                      </div>
+                      <div className="text-[11px] text-slate-500 mt-1">
+                        {isComplete ? "Completed!" : `${achievement.progress}/${achievement.total}`}
+                      </div>
                     </div>
-                    <div className="mt-1 h-2 bg-white/60 rounded-full overflow-hidden">
-                      <div className="h-full bg-gradient-to-r from-[#5b7bff] to-[#9f7aea]" style={{ width: `${pct}%` }} />
-                    </div>
-                    <div className="text-[11px] text-slate-500 mt-1">
-                      {achievement.progress}/{achievement.total} to unlock
-                    </div>
-                  </div>
-                );
-              })}
+                  );
+                });
+              })()}
             </div>
           </div>
 
