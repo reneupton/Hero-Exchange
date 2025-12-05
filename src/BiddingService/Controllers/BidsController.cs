@@ -1,3 +1,5 @@
+// Handles bid placement and retrieval for a single auction.
+// Uses MongoDB.Entities for persistence and publishes bid events to the bus.
 using AutoMapper;
 using BiddingService.Models;
 using BiddingService.Services;
@@ -21,6 +23,13 @@ namespace BiddingService.Controllers
         private IMapper _mapper { get; }
 
 
+        /// <summary>
+        /// Creates a controller capable of placing bids, mapping DTOs, publishing events, and awarding progress.
+        /// </summary>
+        /// <param name="mapper">Automapper instance for model to DTO conversion.</param>
+        /// <param name="publishEndpoint">MassTransit publish endpoint for emitting bid events.</param>
+        /// <param name="grpcAuctionClient">gRPC client to resolve auctions that are not locally cached.</param>
+        /// <param name="progressService">Service for updating user progress based on bid activity.</param>
         public BidsController(IMapper mapper, IPublishEndpoint publishEndpoint, GrpcAuctionClient grpcAuctionClient, ProgressService progressService)
         {
             _mapper = mapper;
@@ -32,6 +41,12 @@ namespace BiddingService.Controllers
 
         [Authorize]
         [HttpPost]
+        /// <summary>
+        /// Places a bid on an auction, validates eligibility and timing, persists the bid, and raises a domain event.
+        /// </summary>
+        /// <param name="auctionId">Auction identifier the bid targets.</param>
+        /// <param name="amount">Bid amount in in-game currency.</param>
+        /// <returns>Created bid as a DTO or a validation error.</returns>
         public async Task<ActionResult<BidDto>> PlaceBid(string auctionId, int amount)
         {
 
@@ -65,6 +80,7 @@ namespace BiddingService.Controllers
                     .Match(a => a.AuctionId == auctionId)
                     .Sort(b => b.Descending(x => x.Amount))
                     .ExecuteFirstAsync();
+            // If this is the highest bid so far (or the first), mark as accepted. Otherwise, mark as too low.
             if ((highBid != null && amount > highBid.Amount) || highBid == null)
             {
                 bid.BidStatus = amount > auction.ReservePrice
@@ -85,6 +101,11 @@ namespace BiddingService.Controllers
         }
 
         [HttpGet("{auctionId}")]
+        /// <summary>
+        /// Returns all bids for a given auction ordered by bid time descending.
+        /// </summary>
+        /// <param name="auctionId">Auction identifier.</param>
+        /// <returns>List of bid DTOs.</returns>
         public async Task<ActionResult<List<BidDto>>> GetBidsForAuction(string auctionId)
         {
             var bids = await DB.Find<Bid>()

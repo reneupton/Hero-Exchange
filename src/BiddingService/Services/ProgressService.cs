@@ -1,9 +1,13 @@
+// Provides player progression and reward logic (gold, XP, mystery summons) for bidding and auction activity.
 using BiddingService.DTOs;
 using BiddingService.Models;
 using MongoDB.Entities;
 
 namespace BiddingService.Services;
 
+/// <summary>
+/// Computes user progress, balances, and rewards for bidding/auction lifecycle and daily/mystery rewards.
+/// </summary>
 public class ProgressService
 {
     private const int StatsPerLevel = 120;
@@ -24,6 +28,11 @@ public class ProgressService
         ["Legendary"] = 900
     };
 
+    /// <summary>
+    /// Retrieves an existing profile or initializes defaults for a new user (including starter pack when applicable).
+    /// </summary>
+    /// <param name="username">Unique username/ID.</param>
+    /// <returns>User profile with starter data and collections.</returns>
     public async Task<UserProgress> GetOrCreateProfile(string username)
     {
         var profile = await DB.Find<UserProgress>().OneAsync(username);
@@ -56,7 +65,7 @@ public class ProgressService
             ID = username,
             Username = username,
             AvatarUrl =
-                $"https://api.dicebear.com/7.x/thumbs/png?seed={username}&backgroundType=gradientLinear&radius=40",
+                $"https://api.dicebear.com/7.x/adventurer/png?seed={username}&backgroundType=gradientLinear&radius=40",
             FlogBalance = 500,
             Experience = 0,
             Level = 1,
@@ -71,6 +80,9 @@ public class ProgressService
         return profile;
     }
 
+    /// <summary>
+    /// Recomputes level and XP based on owned heroes' total stats (hero power).
+    /// </summary>
     internal static void RefreshLevel(UserProgress profile)
     {
         profile.OwnedHeroes ??= new List<OwnedHero>();
@@ -79,6 +91,9 @@ public class ProgressService
         profile.Level = Math.Max(1, (totalPower / StatsPerLevel) + 1);
     }
 
+    /// <summary>
+    /// Calculates a gold reward based on a base amount and multiplier while enforcing a minimum.
+    /// </summary>
     internal static int CalculateCoinBonus(int? amount, double multiplier, int minimum)
     {
         var raw = (amount ?? 0) * multiplier;
@@ -88,6 +103,7 @@ public class ProgressService
     private static ProgressDto ToDto(UserProgress profile)
     {
         profile.OwnedHeroes ??= new List<OwnedHero>();
+        profile.ClaimedAchievements ??= new List<string>();
         var experience = CalculateHeroPower(profile);
         return new ProgressDto
         {
@@ -109,10 +125,14 @@ public class ProgressService
             LastMysteryRewardAt = profile.LastMysteryRewardAt,
             LastMysteryRewardXp = profile.LastMysteryRewardXp,
             LastMysteryRewardCoins = profile.LastMysteryRewardCoins,
-            OwnedHeroes = profile.OwnedHeroes.Select(MapOwnedHero).ToList()
+            OwnedHeroes = profile.OwnedHeroes.Select(MapOwnedHero).ToList(),
+            ClaimedAchievements = profile.ClaimedAchievements
         };
     }
 
+    /// <summary>
+    /// Awards a daily login bonus if not already claimed for the UTC day.
+    /// </summary>
     public async Task<ProgressDto> TrackDailyLogin(string username)
     {
         var profile = await GetOrCreateProfile(username);
@@ -131,6 +151,9 @@ public class ProgressService
         return ToDto(profile);
     }
 
+    /// <summary>
+    /// Applies bid hold logic, deducts coins for the delta, and increments bid stats.
+    /// </summary>
     public async Task<ProgressDto> AwardBidAsync(string username, int amount, string auctionId)
     {
         var profile = await GetOrCreateProfile(username);
@@ -157,6 +180,9 @@ public class ProgressService
         return ToDto(profile);
     }
 
+    /// <summary>
+    /// Increments listing count and coins when a user creates an auction.
+    /// </summary>
     public async Task<ProgressDto> AwardListingAsync(string username)
     {
         var profile = await GetOrCreateProfile(username);
@@ -170,6 +196,9 @@ public class ProgressService
         return ToDto(profile);
     }
 
+    /// <summary>
+    /// Awards coins for completed sales.
+    /// </summary>
     public async Task<ProgressDto> AwardSaleAsync(string username, int? amount)
     {
         var profile = await GetOrCreateProfile(username);
@@ -183,6 +212,9 @@ public class ProgressService
         return ToDto(profile);
     }
 
+    /// <summary>
+    /// Awards coins for purchases and increments auctions won.
+    /// </summary>
     public async Task<ProgressDto> AwardPurchaseAsync(string username, int? amount)
     {
         var profile = await GetOrCreateProfile(username);
@@ -196,6 +228,9 @@ public class ProgressService
         return ToDto(profile);
     }
 
+    /// <summary>
+    /// Generic dispatcher for awarding based on action keyword.
+    /// </summary>
     public Task<ProgressDto> AwardAsync(string username, string action, int? amount = null)
     {
         return action?.ToLower() switch
@@ -209,6 +244,9 @@ public class ProgressService
         };
     }
 
+    /// <summary>
+    /// Retrieves a profile and updates XP/level before returning DTO.
+    /// </summary>
     public async Task<ProgressDto> GetProfile(string username)
     {
         var profile = await GetOrCreateProfile(username);
@@ -217,6 +255,26 @@ public class ProgressService
         return ToDto(profile);
     }
 
+    /// <summary>
+    /// Marks an achievement as claimed for a user.
+    /// </summary>
+    public async Task<ProgressDto> ClaimAchievement(string username, string achievementId)
+    {
+        var profile = await GetOrCreateProfile(username);
+        profile.ClaimedAchievements ??= new List<string>();
+
+        if (!profile.ClaimedAchievements.Contains(achievementId, StringComparer.OrdinalIgnoreCase))
+        {
+            profile.ClaimedAchievements.Add(achievementId);
+            await profile.SaveAsync();
+        }
+
+        return ToDto(profile);
+    }
+
+    /// <summary>
+    /// Returns a leaderboard sorted by total hero power (then level) for the top 10.
+    /// </summary>
     public async Task<List<ProgressDto>> GetLeaderboard()
     {
         var leaders = await DB.Find<UserProgress>().ExecuteAsync();
@@ -234,6 +292,9 @@ public class ProgressService
         return ordered.Select(ToDto).ToList();
     }
 
+    /// <summary>
+    /// Clears held bids for a finished auction and refunds non-winning bidders.
+    /// </summary>
     public async Task SettleAuction(string auctionId, string winner)
     {
         var profiles = await DB.Find<UserProgress>()
@@ -256,6 +317,9 @@ public class ProgressService
         }
     }
 
+    /// <summary>
+    /// Rolls a 24h-gated mystery reward: awards gold and a random hero variant based on weighted rarity.
+    /// </summary>
     public async Task<SummonResultDto> OpenMystery(string username)
     {
         var profile = await GetOrCreateProfile(username);
