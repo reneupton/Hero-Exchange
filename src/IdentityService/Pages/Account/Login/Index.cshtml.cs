@@ -46,6 +46,32 @@ public class Index : PageModel
     public async Task<IActionResult> OnGet(string returnUrl)
     {
         await BuildModelAsync(returnUrl);
+        var context = await _interaction.GetAuthorizationContextAsync(returnUrl);
+
+        // Auto-login guest if login_hint=guest and GUEST_PASSWORD is configured
+        if (string.Equals(context?.LoginHint, "guest", StringComparison.OrdinalIgnoreCase))
+        {
+            var guestPassword = Environment.GetEnvironmentVariable("GUEST_PASSWORD");
+            if (!string.IsNullOrWhiteSpace(guestPassword))
+            {
+                var signIn = await _signInManager.PasswordSignInAsync("guest", guestPassword, false, lockoutOnFailure: true);
+                if (signIn.Succeeded)
+                {
+                    var user = await _userManager.FindByNameAsync("guest");
+                    if (user != null)
+                    {
+                        await _events.RaiseAsync(new UserLoginSuccessEvent(user.UserName, user.Id, user.UserName, clientId: context?.Client.ClientId));
+                    }
+
+                    if (context != null)
+                    {
+                        return context.IsNativeClient() ? this.LoadingPage(returnUrl) : Redirect(returnUrl);
+                    }
+
+                    return Redirect("~/");
+                }
+            }
+        }
             
         if (View.IsExternalLoginOnly)
         {
