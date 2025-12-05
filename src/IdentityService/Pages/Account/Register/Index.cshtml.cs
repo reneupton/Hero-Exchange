@@ -54,6 +54,13 @@ public class Index : PageModel
 
                 RegisterSuccess = true;
             }
+            else
+            {
+                foreach (var error in result.Errors)
+                {
+                    ModelState.AddModelError(string.Empty, error.Description);
+                }
+            }
         }
             return Page();
     }
