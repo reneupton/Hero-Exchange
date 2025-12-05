@@ -1,5 +1,9 @@
+// DTOs describing user progress, balances, holds, and hero ownership sent to clients.
 namespace BiddingService.DTOs
 {
+    /// <summary>
+    /// Snapshot of a user's progression, balances, stats, and owned heroes.
+    /// </summary>
     public class ProgressDto
     {
         public string Username { get; set; }
@@ -22,8 +26,12 @@ namespace BiddingService.DTOs
     public int? LastMysteryRewardXp { get; set; }
     public int? LastMysteryRewardCoins { get; set; }
     public List<OwnedHeroDto> OwnedHeroes { get; set; } = new();
+    public List<string> ClaimedAchievements { get; set; } = new();
 }
 
+    /// <summary>
+    /// Represents an active bid hold against a specific auction.
+    /// </summary>
     public class HeldBidDto
     {
         public string AuctionId { get; set; }

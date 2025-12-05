@@ -1,3 +1,4 @@
+// Seeds sample user progress data for local/testing environments.
 using BiddingService.Models;
 using MongoDB.Entities;
 
@@ -5,6 +6,9 @@ namespace BiddingService.Services;
 
 public static class SeedProgressData
 {
+    /// <summary>
+    /// Seeds sample progress users if the collection is empty.
+    /// </summary>
     public static async Task SeedAsync()
     {
         var existing = await DB.CountAsync<UserProgress>();
@@ -52,7 +56,7 @@ public static class SeedProgressData
                 ID = user,
                 Username = user,
                 AvatarUrl =
-                    $"https://api.dicebear.com/7.x/thumbs/png?seed={user}&backgroundType=gradientLinear&radius=40",
+                    $"https://api.dicebear.com/7.x/adventurer/png?seed={user}&backgroundType=gradientLinear&radius=40",
                 Experience = xp,
                 Level = Math.Max(1, (xp / 500) + 1),
                 FlogBalance = random.Next(250, 9000),

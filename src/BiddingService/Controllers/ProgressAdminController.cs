@@ -1,3 +1,4 @@
+// Admin-only endpoints for inspecting and mutating user progress, balances, avatars, cooldowns, and inventories.
 #nullable enable
 
 using BiddingService.DTOs;
@@ -15,11 +16,18 @@ namespace BiddingService.Controllers
     {
         private readonly IPublishEndpoint _publishEndpoint;
 
+        /// <summary>
+        /// Creates the admin controller for progress operations.
+        /// </summary>
+        /// <param name="publishEndpoint">Bus publisher for progress-related events.</param>
         public ProgressAdminController(IPublishEndpoint publishEndpoint)
         {
             _publishEndpoint = publishEndpoint;
         }
 
+        /// <summary>
+        /// Finds a user by ID or username field.
+        /// </summary>
         private async Task<UserProgress?> FindUser(string identifier)
         {
             // try by ID
@@ -33,6 +41,9 @@ namespace BiddingService.Controllers
         }
 
         [HttpGet("users")]
+        /// <summary>
+        /// Lists users with paging.
+        /// </summary>
         public async Task<ActionResult<IEnumerable<UserProgress>>> GetUsers([FromQuery] int page = 1, [FromQuery] int pageSize = 50)
         {
             var skip = Math.Max(0, (page - 1) * pageSize);
@@ -44,6 +55,9 @@ namespace BiddingService.Controllers
         }
 
         [HttpGet("users/{username}")]
+        /// <summary>
+        /// Fetches a single user by id/username.
+        /// </summary>
         public async Task<ActionResult<UserProgress>> GetUser(string username)
         {
             var user = await FindUser(username);
@@ -52,6 +66,9 @@ namespace BiddingService.Controllers
         }
 
         [HttpPost("users/{username}/balance")]
+        /// <summary>
+        /// Adjusts coin balance and publishes an adjustment event.
+        /// </summary>
         public async Task<ActionResult<UserProgress>> AdjustBalance(string username, [FromBody] AdminAdjustDto dto)
         {
             var user = await FindUser(username);
@@ -68,6 +85,9 @@ namespace BiddingService.Controllers
         }
 
         [HttpPost("users/{username}/xp")]
+        /// <summary>
+        /// Adjusts XP/Level and publishes an adjustment event.
+        /// </summary>
         public async Task<ActionResult<UserProgress>> AdjustXp(string username, [FromBody] AdminAdjustDto dto)
         {
             var user = await FindUser(username);
@@ -86,6 +106,9 @@ namespace BiddingService.Controllers
         }
 
         [HttpPost("users/{username}/avatar")]
+        /// <summary>
+        /// Sets avatar URL and emits an avatar updated event.
+        /// </summary>
         public async Task<ActionResult<UserProgress>> SetAvatar(string username, [FromBody] AdminAdjustDto dto)
         {
             var user = await FindUser(username);
@@ -105,6 +128,9 @@ namespace BiddingService.Controllers
         }
 
         [HttpPost("users/{username}/reset-cooldowns")]
+        /// <summary>
+        /// Resets daily/mystery cooldowns for a user.
+        /// </summary>
         public async Task<ActionResult<UserProgress>> ResetCooldowns(string username)
         {
             var user = await FindUser(username);
@@ -123,6 +149,9 @@ namespace BiddingService.Controllers
         }
 
         [HttpGet("users/{username}/heroes")]
+        /// <summary>
+        /// Lists all heroes owned by the user.
+        /// </summary>
         public async Task<ActionResult<List<OwnedHero>>> GetHeroes(string username)
         {
             var user = await FindUser(username);
@@ -132,6 +161,9 @@ namespace BiddingService.Controllers
         }
 
         [HttpPost("users/{username}/heroes")]
+        /// <summary>
+        /// Adds a hero variant to the user's inventory.
+        /// </summary>
         public async Task<ActionResult> AddHero(string username, [FromBody] AdminHeroRequest request)
         {
             if (string.IsNullOrWhiteSpace(request.HeroId) || string.IsNullOrWhiteSpace(request.Rarity))
@@ -166,6 +198,9 @@ namespace BiddingService.Controllers
         }
 
         [HttpDelete("users/{username}/heroes/{variantId}")]
+        /// <summary>
+        /// Removes a hero variant from the user's inventory.
+        /// </summary>
         public async Task<ActionResult> RemoveHero(string username, string variantId)
         {
             var user = await FindUser(username);
@@ -182,7 +217,34 @@ namespace BiddingService.Controllers
             return Ok(user.OwnedHeroes);
         }
 
+        [HttpPost("migrate-avatars")]
+        /// <summary>
+        /// One-time helper to migrate legacy dicebear avatar URLs.
+        /// </summary>
+        public async Task<ActionResult> MigrateAvatars()
+        {
+            var users = await DB.Find<UserProgress>().ExecuteAsync();
+            var updated = 0;
+
+            foreach (var user in users)
+            {
+                if (string.IsNullOrEmpty(user.AvatarUrl)) continue;
+                if (!user.AvatarUrl.Contains("dicebear.com")) continue;
+                if (!user.AvatarUrl.Contains("/thumbs/")) continue;
+
+                // Convert thumbs -> adventurer
+                user.AvatarUrl = user.AvatarUrl.Replace("/thumbs/", "/adventurer/");
+                await user.SaveAsync();
+                updated++;
+            }
+
+            return Ok(new { message = $"Migrated {updated} user avatars from thumbs to adventurer style" });
+        }
+
         [HttpPost("users/{username}/starter-pack")]
+        /// <summary>
+        /// Grants a fixed starter pack if not already owned.
+        /// </summary>
         public async Task<ActionResult<List<OwnedHero>>> GrantStarterPack(string username)
         {
             var user = await FindUser(username);

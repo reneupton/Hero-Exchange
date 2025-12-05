@@ -1,5 +1,6 @@
 using MongoDB.Entities;
 
+// Persistence model for tracking user balances, stats, achievements, and hero inventory in MongoDB.
 namespace BiddingService.Models;
 
 public class UserProgress : Entity
@@ -21,4 +22,5 @@ public class UserProgress : Entity
     public int? LastMysteryRewardXp { get; set; }
     public int? LastMysteryRewardCoins { get; set; }
     public List<OwnedHero> OwnedHeroes { get; set; } = new();
+    public List<string> ClaimedAchievements { get; set; } = new();
 }
