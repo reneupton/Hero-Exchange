@@ -49,6 +49,13 @@ export default function UserActions({user} : Props) {
       `https://api.dicebear.com/7.x/adventurer/png?seed=${user.username}&backgroundType=gradientLinear&radius=40`
   );
 
+  const handleSignOut = () => {
+    if (typeof window !== "undefined") {
+      localStorage.setItem("lastUser", user.username ?? user.name ?? "");
+    }
+    signOut({callbackUrl: '/'});
+  };
+
   const label = (
     <div className="flex items-center gap-3 bg-[rgba(26,32,48,0.9)] px-3 py-2 rounded-full border border-[var(--card-border)] shadow-md">
       <div className="relative">
@@ -89,7 +96,7 @@ export default function UserActions({user} : Props) {
         Sell a hero
     </Dropdown.Item>
     <Dropdown.Divider />
-    <Dropdown.Item className="text-[var(--text)] hover:bg-[rgba(244,63,94,0.15)]" onClick={() => signOut({callbackUrl: '/'})}>
+    <Dropdown.Item className="text-[var(--text)] hover:bg-[rgba(244,63,94,0.15)]" onClick={handleSignOut}>
       Sign out
     </Dropdown.Item>
   </Dropdown>

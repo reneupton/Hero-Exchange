@@ -31,7 +31,7 @@ export default function EmptyFilter({
                 <button className="soft-button-ghost px-5 py-2" onClick={reset}>Remove Filters</button>
             )}
             {showLogin && (
-                <button className="soft-button-ghost px-5 py-2 ml-2" onClick={() => signIn('id-server', {callbackUrl})}>Login</button>
+                <button className="soft-button-ghost px-5 py-2 ml-2" onClick={() => signIn('id-server', {callbackUrl, prompt: 'login'})}>Login</button>
             )}
         </div>
     </div>

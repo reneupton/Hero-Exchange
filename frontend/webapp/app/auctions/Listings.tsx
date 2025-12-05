@@ -321,7 +321,7 @@ export default function Listings({ user }: Props) {
   };
 
   const handleLogin = () => {
-    signIn("id-server");
+    signIn("id-server", { callbackUrl: "/", prompt: "login" });
   };
 
   const handleGuestLogin = async () => {
