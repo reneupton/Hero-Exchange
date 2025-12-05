@@ -7,6 +7,18 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddReverseProxy()
 .LoadFromConfig(builder.Configuration.GetSection("ReverseProxy"));
 
+var clientApp = builder.Configuration["ClientApp"];
+var adminApp = builder.Configuration["AdminApp"];
+var allowedOrigins = new List<string>();
+if (!string.IsNullOrWhiteSpace(clientApp))
+{
+    allowedOrigins.Add(clientApp);
+}
+if (!string.IsNullOrWhiteSpace(adminApp))
+{
+    allowedOrigins.Add(adminApp);
+}
+
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 .AddJwtBearer(options =>
 {
@@ -18,11 +30,23 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 });
 
 builder.Services.AddCors(options => {
+    options.AddDefaultPolicy(b => {
+        b.WithOrigins(allowedOrigins.ToArray())
+            .AllowAnyHeader()
+            .AllowAnyMethod()
+            .AllowCredentials();
+    });
     options.AddPolicy("customPolicy", b => {
-        b.AllowAnyHeader().AllowAnyMethod().AllowCredentials().WithOrigins(builder.Configuration["ClientApp"]);
+        b.WithOrigins(allowedOrigins.ToArray())
+            .AllowAnyHeader()
+            .AllowAnyMethod()
+            .AllowCredentials();
     });
     options.AddPolicy("adminPolicy", b => {
-        b.AllowAnyHeader().AllowAnyMethod().WithOrigins(builder.Configuration["AdminApp"] ?? "http://localhost:4200");
+        b.WithOrigins(allowedOrigins.ToArray())
+            .AllowAnyHeader()
+            .AllowAnyMethod()
+            .AllowCredentials();
     });
 });
 
