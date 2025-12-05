@@ -60,10 +60,13 @@ IdentityModelEventSource.ShowPII = true;
 
 var app = builder.Build();
 
-// Admin token guard for /admin routes
+app.UseCors();
+
+// Admin token guard for /admin routes (skip OPTIONS for CORS preflight)
 app.Use(async (context, next) =>
 {
-    if (context.Request.Path.StartsWithSegments("/admin", StringComparison.OrdinalIgnoreCase))
+    if (context.Request.Path.StartsWithSegments("/admin", StringComparison.OrdinalIgnoreCase) &&
+        !HttpMethods.IsOptions(context.Request.Method))
     {
         var configured = builder.Configuration["AdminToken"];
         if (string.IsNullOrEmpty(configured) ||
@@ -78,8 +81,6 @@ app.Use(async (context, next) =>
 
     await next();
 });
-
-app.UseCors();
 
 app.UseAuthentication();
 app.UseAuthorization();
