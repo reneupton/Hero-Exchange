@@ -51,7 +51,25 @@ public class Index : PageModel
         // Auto-login guest if login_hint=guest (used by "Login as Guest")
         if (string.Equals(context?.LoginHint, "guest", StringComparison.OrdinalIgnoreCase))
         {
+            var guestPassword = Environment.GetEnvironmentVariable("GUEST_PASSWORD") ?? "Guest123$";
             var guest = await _userManager.FindByNameAsync("guest");
+            if (guest == null)
+            {
+                guest = new ApplicationUser
+                {
+                    UserName = "guest",
+                    Email = "guest@heroexchange.demo",
+                    EmailConfirmed = true
+                };
+                var createResult = await _userManager.CreateAsync(guest, guestPassword);
+                if (createResult.Succeeded)
+                {
+                    await _userManager.AddClaimsAsync(guest, new Claim[]
+                    {
+                        new Claim(JwtClaimTypes.Name, "Guest User")
+                    });
+                }
+            }
             if (guest != null)
             {
                 await _signInManager.SignInAsync(guest, isPersistent: false);
@@ -60,6 +78,11 @@ public class Index : PageModel
                 if (context != null)
                 {
                     return context.IsNativeClient() ? this.LoadingPage(returnUrl) : Redirect(returnUrl);
+                }
+
+                if (!string.IsNullOrEmpty(returnUrl))
+                {
+                    return Redirect(returnUrl);
                 }
 
                 return Redirect("~/");
