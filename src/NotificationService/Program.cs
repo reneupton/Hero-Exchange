@@ -1,3 +1,4 @@
+// Entry point for NotificationService: configures MassTransit consumers and SignalR hub with CORS.
 using MassTransit;
 using NotificationService;
 using NotificationService.Consumers;

@@ -1,3 +1,4 @@
+// Entry point for GatewayService: configures YARP reverse proxy, authentication, and CORS for client/admin apps.
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Logging;
 using Microsoft.Extensions.Primitives;
