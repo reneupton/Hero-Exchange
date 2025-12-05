@@ -1,3 +1,4 @@
+// Public search endpoints for querying auctions with filters, sort, and paging against MongoDB search index.
 using SearchService.Models;
 using Microsoft.AspNetCore.Mvc;
 using MongoDB.Entities;
@@ -9,6 +10,11 @@ namespace SearchService
     [Route("api/search")]
     public class SearchController : ControllerBase
     {
+        /// <summary>
+        /// Searches auctions by text, sort order, filter, and paging.
+        /// </summary>
+        /// <param name="searchParams">Search, filter, and paging parameters.</param>
+        /// <returns>Paged results with total counts.</returns>
         [HttpGet]
         public async Task<ActionResult<List<Item>>> SearchItems([FromQuery]SearchParams searchParams) {
             var query = DB.PagedSearch<Item, Item>();
