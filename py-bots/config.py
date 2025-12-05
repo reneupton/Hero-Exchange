@@ -3,8 +3,8 @@ from typing import List, Optional
 
 
 class Settings(BaseSettings):
-    api_base: AnyHttpUrl = "http://localhost:6001/"
-    identity_url: Optional[AnyHttpUrl] = "http://localhost:5000/"
+    api_base: AnyHttpUrl = "http://gateway-service.railway.internal:8080/"
+    identity_url: Optional[AnyHttpUrl] = "http://identity-service.railway.internal:8080/"
 
     # Default to seeded Identity users to avoid invalid_grant errors
     bot_users: str = "alice,bob"
