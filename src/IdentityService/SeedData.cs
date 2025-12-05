@@ -18,9 +18,8 @@ public class SeedData
             context.Database.Migrate();
 
             var userMgr = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+            var guestPassword = Environment.GetEnvironmentVariable("GUEST_PASSWORD") ?? "Guest123$";
 
-            if (userMgr.Users.Any()) return;
-            
             var alice = userMgr.FindByNameAsync("alice").Result;
             if (alice == null)
             {
@@ -77,6 +76,35 @@ public class SeedData
             else
             {
                 Log.Debug("bob already exists");
+            }
+
+            var guest = userMgr.FindByNameAsync("guest").Result;
+            if (guest == null)
+            {
+                guest = new ApplicationUser
+                {
+                    UserName = "guest",
+                    Email = "guest@heroexchange.demo",
+                    EmailConfirmed = true
+                };
+                var result = userMgr.CreateAsync(guest, guestPassword).Result;
+                if (!result.Succeeded)
+                {
+                    throw new Exception(result.Errors.First().Description);
+                }
+
+                result = userMgr.AddClaimsAsync(guest, new Claim[]{
+                            new Claim(JwtClaimTypes.Name, "Guest User")
+                }).Result;
+                if (!result.Succeeded)
+                {
+                    throw new Exception(result.Errors.First().Description);
+                }
+                Log.Debug("guest created");
+            }
+            else
+            {
+                Log.Debug("guest already exists");
             }
         }
     }
