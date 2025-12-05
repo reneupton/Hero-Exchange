@@ -48,28 +48,21 @@ public class Index : PageModel
         await BuildModelAsync(returnUrl);
         var context = await _interaction.GetAuthorizationContextAsync(returnUrl);
 
-        // Auto-login guest if login_hint=guest and GUEST_PASSWORD is configured
+        // Auto-login guest if login_hint=guest (used by "Login as Guest")
         if (string.Equals(context?.LoginHint, "guest", StringComparison.OrdinalIgnoreCase))
         {
-            var guestPassword = Environment.GetEnvironmentVariable("GUEST_PASSWORD");
-            if (!string.IsNullOrWhiteSpace(guestPassword))
+            var guest = await _userManager.FindByNameAsync("guest");
+            if (guest != null)
             {
-                var signIn = await _signInManager.PasswordSignInAsync("guest", guestPassword, false, lockoutOnFailure: true);
-                if (signIn.Succeeded)
+                await _signInManager.SignInAsync(guest, isPersistent: false);
+                await _events.RaiseAsync(new UserLoginSuccessEvent(guest.UserName, guest.Id, guest.UserName, clientId: context?.Client.ClientId));
+
+                if (context != null)
                 {
-                    var user = await _userManager.FindByNameAsync("guest");
-                    if (user != null)
-                    {
-                        await _events.RaiseAsync(new UserLoginSuccessEvent(user.UserName, user.Id, user.UserName, clientId: context?.Client.ClientId));
-                    }
-
-                    if (context != null)
-                    {
-                        return context.IsNativeClient() ? this.LoadingPage(returnUrl) : Redirect(returnUrl);
-                    }
-
-                    return Redirect("~/");
+                    return context.IsNativeClient() ? this.LoadingPage(returnUrl) : Redirect(returnUrl);
                 }
+
+                return Redirect("~/");
             }
         }
             
