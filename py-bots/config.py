@@ -1,8 +1,10 @@
+"""Configuration for bot runtime, API targets, and behavior tuning."""
 from pydantic import BaseSettings, AnyHttpUrl
 from typing import List, Optional
 
 
 class Settings(BaseSettings):
+    """Environment-driven settings for bot behavior and service endpoints."""
     api_base: AnyHttpUrl = "https://gateway-service-production-a4ca.up.railway.app/"
     identity_url: Optional[AnyHttpUrl] = "https://identity-service-production-115a.up.railway.app/"
 

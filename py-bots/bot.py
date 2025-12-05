@@ -1,3 +1,4 @@
+"""Core bot logic: creates listings, places bids, and opens mystery boxes to simulate marketplace activity."""
 import asyncio
 import random
 import time
