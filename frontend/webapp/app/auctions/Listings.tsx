@@ -101,7 +101,8 @@ export default function Listings({ user }: Props) {
 
   const resolveAuctionCharacter = useCallback(
     (auction: Auction): CharacterDefinition => {
-      const normalized = normalizeImagePath(auction.imageUrl);
+      const normalized = normalizeImagePath(auction.imageUrl)
+        .replace("fallen_angel_", "fallen_angels_"); // fix legacy asset typo
       const auctionKey = getImageKey(auction.imageUrl);
       const matchByExactImage = characterCatalog.find(
         (c) => normalizeImagePath(c.cardImage) === normalized
@@ -606,30 +607,30 @@ export default function Listings({ user }: Props) {
             </div>
           </div>
 
-          {/* Daily quests */}
+          {/* Achievements */}
           <div className="glass-panel ios-shadow rounded-3xl p-5 border border-[var(--accent-3)]/30 h-full flex flex-col gap-3">
             <div className="flex items-center justify-between">
-              <div className="text-sm font-semibold text-slate-700 uppercase tracking-wide">Daily quests</div>
-              <span className="badge badge-neutral">Resets daily</span>
+              <div className="text-sm font-semibold text-slate-700 uppercase tracking-wide">Achievements</div>
+              <span className="badge badge-neutral">Lifetime</span>
             </div>
             <div className="space-y-2 flex-1">
               {[
-                { label: "Place 2 bids", progress: Math.min(2, profile?.bidsPlaced ?? 0), total: 2, reward: "+15 XP" },
-                { label: "Win an auction", progress: Math.min(1, profile?.auctionsWon ?? 0), total: 1, reward: "+50 XP" },
-                { label: "List a new item", progress: Math.min(1, profile?.auctionsCreated ?? 0), total: 1, reward: "+25 XP" },
-              ].map((quest) => {
-                const pct = Math.min(100, Math.round((quest.progress / quest.total) * 100));
+                { label: "Bids placed", progress: profile?.bidsPlaced ?? 0, total: 100, milestone: "Master Bidder" },
+                { label: "Auctions won", progress: profile?.auctionsWon ?? 0, total: 25, milestone: "Champion Collector" },
+                { label: "Auctions created", progress: profile?.auctionsCreated ?? 0, total: 50, milestone: "Trading Legend" },
+              ].map((achievement) => {
+                const pct = Math.min(100, Math.round((achievement.progress / achievement.total) * 100));
                 return (
-                  <div key={quest.label} className="rounded-2xl border border-white/60 bg-white/80 px-3 py-2">
+                  <div key={achievement.label} className="rounded-2xl border border-white/60 bg-white/80 px-3 py-2">
                     <div className="flex items-center justify-between text-sm text-slate-800">
-                      <span>{quest.label}</span>
-                      <span className="text-xs text-slate-500">{quest.reward}</span>
+                      <span>{achievement.label}</span>
+                      <span className="text-xs text-slate-500">{achievement.milestone}</span>
                     </div>
                     <div className="mt-1 h-2 bg-white/60 rounded-full overflow-hidden">
                       <div className="h-full bg-gradient-to-r from-[#5b7bff] to-[#9f7aea]" style={{ width: `${pct}%` }} />
                     </div>
                     <div className="text-[11px] text-slate-500 mt-1">
-                      {quest.progress}/{quest.total} completed
+                      {achievement.progress}/{achievement.total} to unlock
                     </div>
                   </div>
                 );
@@ -904,4 +905,3 @@ export default function Listings({ user }: Props) {
     </>
   );
 }
-
