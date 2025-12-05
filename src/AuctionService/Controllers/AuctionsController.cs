@@ -1,3 +1,4 @@
+// Public auction endpoints for browsing, creating, updating, and deleting auctions.
 ﻿using AuctionService.Data;
 using AuctionService.DTOs;
 using AuctionService.Entities;
@@ -20,6 +21,12 @@ public class AuctionsController : ControllerBase
     private readonly IMapper _mapper;
     private readonly IPublishEndpoint _publishEndpoint;
 
+    /// <summary>
+    /// Creates a controller for auction CRUD and event publishing.
+    /// </summary>
+    /// <param name="context">EF Core DbContext for auction storage.</param>
+    /// <param name="mapper">Automapper instance for DTO/entity mapping.</param>
+    /// <param name="publishEndpoint">Bus publisher for auction lifecycle events.</param>
     public AuctionsController(AuctionDbContext context, IMapper mapper, IPublishEndpoint publishEndpoint)
     {
         _context = context;
@@ -28,6 +35,10 @@ public class AuctionsController : ControllerBase
     }
 
     [HttpGet]
+    /// <summary>
+    /// Returns all auctions optionally filtered by updated date.
+    /// </summary>
+    /// <param name="date">Optional ISO/UTC date string; returns auctions updated after this.</param>
     public async Task<ActionResult<List<AuctionDto>>> GetAllAuctions(string date)
     {
         var query = _context.Auctions.OrderBy(x => x.Item.Title).AsQueryable();
@@ -41,6 +52,9 @@ public class AuctionsController : ControllerBase
     }
 
     [HttpGet("{id}")]
+    /// <summary>
+    /// Returns a single auction by id.
+    /// </summary>
     public async Task<ActionResult<AuctionDto>> GetAuctionById(Guid id)
     {
         var auction = await _context.Auctions
@@ -54,6 +68,9 @@ public class AuctionsController : ControllerBase
 
     [Authorize]
     [HttpPost]
+    /// <summary>
+    /// Creates a new auction for the authenticated seller and publishes AuctionCreated.
+    /// </summary>
     public async Task<ActionResult<AuctionDto>> CreateAuction(CreateAuctionDto auctionDto)
     {
             // Explicitly specify the AuctionEnd to be UTC
@@ -77,6 +94,9 @@ public class AuctionsController : ControllerBase
 
     [Authorize]
     [HttpPut("{id}")]
+    /// <summary>
+    /// Updates auction details if caller is the seller; publishes AuctionUpdated.
+    /// </summary>
     public async Task<ActionResult> UpdateAuction(Guid id, UpdateAuctionDto updateAuctionDto)
     {
         var auction = await _context.Auctions.Include(x => x.Item)
@@ -106,6 +126,9 @@ public class AuctionsController : ControllerBase
 
     [Authorize]
     [HttpDelete("{id}")]
+    /// <summary>
+    /// Deletes an auction owned by the caller and publishes AuctionDeleted.
+    /// </summary>
     public async Task<ActionResult> DeleteAuction(Guid id)
     {
         var auction = await _context.Auctions.FindAsync(id);

@@ -1,3 +1,4 @@
+// Admin endpoints for paging, inspecting, and mutating auctions (including status changes).
 using AuctionService.Data;
 using AuctionService.DTOs;
 using AuctionService.Entities;
@@ -18,6 +19,12 @@ namespace AuctionService.Controllers
         private readonly IMapper _mapper;
         private readonly IPublishEndpoint _publishEndpoint;
 
+        /// <summary>
+        /// Creates an admin controller for auction oversight and status changes.
+        /// </summary>
+        /// <param name="context">EF Core DbContext for auction storage.</param>
+        /// <param name="mapper">Automapper for DTO projections.</param>
+        /// <param name="publishEndpoint">Bus publisher for status change events.</param>
         public AdminAuctionsController(AuctionDbContext context, IMapper mapper, IPublishEndpoint publishEndpoint)
         {
             _context = context;
@@ -26,6 +33,9 @@ namespace AuctionService.Controllers
         }
 
         [HttpGet]
+        /// <summary>
+        /// Returns paged auctions, optionally filtered by status.
+        /// </summary>
         public async Task<ActionResult<IEnumerable<AuctionDto>>> GetAuctions([FromQuery] int page = 1, [FromQuery] int pageSize = 20, [FromQuery] string status = null)
         {
             var query = _context.Auctions.Include(a => a.Item).AsQueryable();
@@ -46,6 +56,9 @@ namespace AuctionService.Controllers
         }
 
         [HttpGet("{id}")]
+        /// <summary>
+        /// Returns a single auction DTO by id.
+        /// </summary>
         public async Task<ActionResult<AuctionDto>> GetAuction(Guid id)
         {
             var auction = await _context.Auctions.Include(a => a.Item)
@@ -56,6 +69,9 @@ namespace AuctionService.Controllers
         }
 
         [HttpPut("{id}")]
+        /// <summary>
+        /// Updates auction/item fields and publishes status change if status mutated.
+        /// </summary>
         public async Task<ActionResult<AuctionDto>> UpdateAuction(Guid id, [FromBody] UpdateAuctionAdminDto dto)
         {
             var auction = await _context.Auctions.Include(a => a.Item).FirstOrDefaultAsync(a => a.Id == id);
@@ -95,6 +111,9 @@ namespace AuctionService.Controllers
         }
 
         [HttpPost("{id}/finish")]
+        /// <summary>
+        /// Marks an auction as finished and publishes a status change.
+        /// </summary>
         public async Task<ActionResult> FinishAuction(Guid id)
         {
             var auction = await _context.Auctions.FirstOrDefaultAsync(a => a.Id == id);
@@ -111,6 +130,9 @@ namespace AuctionService.Controllers
         }
 
         [HttpPost("{id}/cancel")]
+        /// <summary>
+        /// Marks an auction as ReserveNotMet and publishes a status change.
+        /// </summary>
         public async Task<ActionResult> CancelAuction(Guid id)
         {
             var auction = await _context.Auctions.FirstOrDefaultAsync(a => a.Id == id);
