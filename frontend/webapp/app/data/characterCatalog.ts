@@ -102,7 +102,7 @@ const heroArchetypes: HeroArchetype[] = [
   },
   {
     id: 'grum',
-    name: 'Grum Ironhorn',
+    name: "D'reece Ironhorn",
     discipline: 'Berserker',
     baseStats: { strength: 96, intellect: 18, vitality: 88, agility: 44 },
     baseGold: 4700,
