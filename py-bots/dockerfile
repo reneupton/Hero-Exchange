@@ -1,19 +1,15 @@
-# syntax=docker/dockerfile:1
-
-ARG PYTHON_VERSION=3.11-slim
-FROM python:${PYTHON_VERSION} AS base
+FROM python:3.11-slim
 
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 
 WORKDIR /app
 
-COPY py-bots/requirements.txt requirements.txt
+COPY requirements.txt .
 
-RUN --mount=type=cache,target=/root/.cache/pip \
-    python -m pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
 
-COPY py-bots/ .
+COPY . .
 
 # Railway provides PORT; default to 8000 when not set (local/dev).
 CMD ["sh", "-c", "uvicorn admin_api:app --host 0.0.0.0 --port ${PORT:-8000}"]
