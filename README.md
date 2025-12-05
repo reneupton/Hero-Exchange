@@ -1,191 +1,108 @@
-# ⚔️ Hero Exchange: RPG Hero Marketplace
+# Hero Exchange
 
-Welcome to **Hero Exchange**, a dark fantasy RPG hero marketplace where players collect, trade, and bid on legendary heroes. This demo project showcases modern development practices with a comprehensive hero collection system, auction mechanics, and engaging user experiences.
+Dark-fantasy hero marketplace built as a portfolio-grade microservices demo. Collect heroes, run live auctions, get daily mystery pulls, and watch real-time bids roll in. Everything runs on a modern stack (Next.js + .NET microservices + SignalR + RabbitMQ) with working auth and search.
 
-❗❗ This is a demo project using **Gold currency** for educational purposes only. No real money is involved. ❗❗
+## Why it’s interesting
+- End-to-end flow: Identity → Gateway → Auctions/Bidding/Search/Notifications → Next.js UI.
+- Real-time UX: SignalR updates for bids/notifications; animated hero cards and daily summon box.
+- Demo-friendly: Seeded users, guest login, bots to keep the marketplace lively.
 
-## ✨ Core Features
+## Tech Stack (with reasons)
+- Frontend: Next.js 13 (App Router), React 18, TypeScript, TailwindCSS – fast DX, server actions, and component-level tests with Jest/RTL.
+- Admin: Angular (separate admin console) – showcases multi-frontend setup.
+- Backend: .NET 8 microservices (Gateway, Identity with Duende, Auction, Bidding, Search, Notification) – clear service boundaries and strong tooling.
+- Messaging/Real-time: RabbitMQ for events, SignalR for live bid/notification streams.
+- Data: PostgreSQL (auctions/users), MongoDB (search index), Redis not required.
+- Infra: Docker, Railway/Vercel for hosting; YARP gateway for routing.
 
-### Hero Collection System
-- **10 Hero Archetypes**: Veyla, Elyra, Morr, Sigrun, Kael, Lyris, Theron, Zara, Draven, and Seraph
-- **4 Rarity Tiers**: Common, Rare, Epic, and Legendary variants with stat scaling
-- **Hero Stats**: Attack, Defense, Magic, Speed - each scales with rarity
-- **Animated Sprites**: Idle and blink animations on hover
-- **Hero Lore**: Rich backstories for each character
+## Features
+- Hero auctions: create, bid, reserve-price handling, status changes.
+- Progression: gold wallet, hero power, achievements, daily login, 24h mystery box.
+- Hero inventory: animated sprites, stats, lore, rarity colors.
+- Search & filters: text search, sort, status filters, seller/winner filters.
+- Admin: adjust balances/XP, manage auctions, reindex search.
+- Bots: Python bot service to simulate listings/bids.
 
-### Marketplace Features
-- **Real-time Auctions**: Bid on hero cards using Gold currency
-- **User Authentication**: Secure registration and login via Duende Identity Service
-- **Live Notifications**: Real-time alerts for bids, auction endings, and admin actions
-- **Hero Detail Modal**: View stats, lore, and place bids inline
+## Screenshots / GIFs
+Place your media in `docs/media/` and reference here:
+- Marketplace grid: `![Marketplace](docs/media/marketplace.png)`
+- Daily summon modal: `![Daily Summon](docs/media/daily-summon.gif)`
+- Admin console: `![Admin](docs/media/admin.png)`
 
-### Progression System
-- **Gold Wallet**: Virtual currency for bidding and purchases
-- **Hero Power**: Level calculated from total hero stats (TotalHeroPower)
-- **Mystery Summons**: Weighted rarity drops to obtain new heroes
-- **Collection Tracking**: View owned heroes in sidebar
+## Getting Started (local)
+Prereqs: .NET 8 SDK, Node.js 18+, Docker Desktop, Python 3.11+ (for bots).
 
-## 🎯 Hero Rarity System
-
-| Rarity | Stat Multiplier | Drop Rate | Visual |
-|--------|-----------------|-----------|--------|
-| Common | 1.0× | 60% | Gray badge |
-| Rare | 1.5× | 25% | Blue badge |
-| Epic | 2.0× | 12% | Purple badge |
-| Legendary | 3.0× | 3% | Gold badge with glow |
-
-## 🛠️ Technical Stack
-
-<p align="center">
-  <img src="https://img.shields.io/badge/C%23-239120?style=flat&logo=c-sharp&logoColor=white" alt="C#">
-  <img src="https://img.shields.io/badge/.NET%207-512BD4?style=flat&logo=dot-net&logoColor=white" alt=".NET">
-  <img src="https://img.shields.io/badge/next%20js-000000?style=flat&logo=nextdotjs&logoColor=white" alt="NextJS">
-  <img src="https://img.shields.io/badge/react%2018-61DAFB?style=flat&logo=react&logoColor=white" alt="React">
-  <img src="https://img.shields.io/badge/TypeScript-3178C6?style=flat&logo=typescript&logoColor=white" alt="TypeScript">
-  <img src="https://img.shields.io/badge/TailwindCSS-38B2AC?style=flat&logo=tailwind-css&logoColor=white" alt="TailwindCSS">
-  <img src="https://img.shields.io/badge/Angular-DD0031?style=flat&logo=angular&logoColor=white" alt="Angular">
-  <img src="https://img.shields.io/badge/PostgreSQL-4169E1?style=flat&logo=postgresql&logoColor=white" alt="PostgreSQL">
-  <img src="https://img.shields.io/badge/MongoDB-4EA94B?style=flat&logo=mongodb&logoColor=white" alt="MongoDB">
-  <img src="https://img.shields.io/badge/RabbitMQ-FF6600?style=flat&logo=rabbitmq&logoColor=white" alt="RabbitMQ">
-  <img src="https://img.shields.io/badge/Docker-2496ED?style=flat&logo=docker&logoColor=white" alt="Docker">
-</p>
-
-### Frontend
-- **Framework**: Next.js 13.4 with App Router
-- **UI**: React 18 + TypeScript + TailwindCSS
-- **Theme**: Dark RPG aesthetic with purple/amber accents
-- **State**: Zustand for hero collection state
-- **Real-time**: SignalR for live auction updates
-- **Admin Console**: Angular 17+ standalone components
-
-### Backend Microservices
-- **Gateway Service**: API routing and load balancing
-- **Identity Service**: Duende IdentityServer for JWT auth
-- **Auction Service**: Hero listing and auction lifecycle
-- **Bidding Service**: Real-time bid processing + hero collection
-- **Search Service**: MongoDB-powered hero search
-- **Notification Service**: SignalR WebSocket notifications
-
-### Databases
-- **PostgreSQL**: Users, auctions, hero ownership
-- **MongoDB**: Search indices, bid history
-
-## 🔧 Architecture
-
-```
-┌─────────────────┐     ┌─────────────────┐
-│   Next.js App   │     │  Admin Console  │
-│  (Hero Exchange)│     │    (Angular)    │
-└────────┬────────┘     └────────┬────────┘
-         │                       │
-         └───────────┬───────────┘
-                     │
-              ┌──────▼──────┐
-              │   Gateway   │
-              │   Service   │
-              └──────┬──────┘
-                     │
-    ┌────────────────┼────────────────┐
-    │                │                │
-┌───▼───┐      ┌─────▼─────┐    ┌─────▼─────┐
-│Identity│      │  Auction  │    │  Bidding  │
-│Service │      │  Service  │    │  Service  │
-└───┬────┘      └─────┬─────┘    └─────┬─────┘
-    │                 │                │
-    │           ┌─────▼─────┐          │
-    │           │  RabbitMQ │          │
-    │           └─────┬─────┘          │
-    │                 │                │
-┌───▼────┐      ┌─────▼─────┐    ┌─────▼─────┐
-│PostgreSQL│    │  Search   │    │  Notify   │
-└─────────┘     │  Service  │    │  Service  │
-                └─────┬─────┘    └───────────┘
-                      │
-                ┌─────▼─────┐
-                │  MongoDB  │
-                └───────────┘
-```
-
-## 🚀 Getting Started
-
-### Prerequisites
-- .NET 7/8 SDK
-- Node.js 18+
-- Docker Desktop
-
-### Local Development
-
-1. **Clone the repository**
 ```bash
 git clone https://github.com/reneupton/Hero-Exchange.git
 cd Hero-Exchange
-```
-
-2. **Start infrastructure**
-```bash
 docker-compose up -d postgres mongodb rabbitmq
-```
-
-3. **Run backend services**
-```bash
-# In separate terminals
+# Backends (each in its own terminal)
 cd src/IdentityService && dotnet run
 cd src/GatewayService && dotnet run
 cd src/AuctionService && dotnet run
 cd src/BiddingService && dotnet run
 cd src/SearchService && dotnet run
 cd src/NotificationService && dotnet run
+# Frontend
+cd frontend/webapp && npm install && npm run dev
+# Admin console (separate repo path)
+cd ../Hero-Exchange-Admin/admin-console && npm install && npm start
 ```
 
-4. **Run frontend**
-```bash
-cd frontend/webapp
-npm install
-npm run dev
-```
-
-5. **Access**
+Services:
 - Frontend: http://localhost:3000
 - Gateway API: http://localhost:6001
 - Identity: http://localhost:5000
 
-### Admin Console
-
-```bash
-cd ../Hero-Exchange-Admin/admin-console
-npm install
-npm start
+## Usage Examples
+**Create an auction (REST)**
+```http
+POST /api/auctions
+Authorization: Bearer <token>
+Content-Type: application/json
+{
+  "title": "Astrael Fallen",
+  "reservePrice": 5000,
+  "auctionEnd": "2025-12-31T23:59:00Z",
+  "imageUrl": "/pets/craftpix-991117-free-fallen-angel-chibi-2d-game-sprites/fallen_angels_1/card/frame_0.png"
+}
 ```
 
-## 🐍 Bot Service
+**Award progress (server action)**
+```ts
+import { awardGamification } from '@/app/actions/gamificationActions';
+await awardGamification('bid', 1200);
+```
 
-Python bots simulate marketplace activity:
+**Bots (simulate activity)**
 ```bash
 cd py-bots
-pip install -r requirements.txt
-python -m main
+cp .env.example .env  # set API_BASE/IDENTITY_URL/BOT_USERS/BOT_PASSWORD
+python -m pytest      # run bot unit tests
+python -m main        # start bots
 ```
 
-## 📦 Deployment
+## Project Structure
+- `src/` – .NET services (Gateway, Identity, Auction, Bidding, Search, Notification)
+- `frontend/webapp/` – Next.js marketplace
+- `Hero-Exchange-Admin/` – Angular admin console (separate repo path)
+- `py-bots/` – Python bot service + FastAPI admin API
+- `tests/` – .NET tests (BiddingService, IdentityService)
+- `docs/` – Deployment notes and (add your) media
 
-See [DEPLOYMENT.md](DEPLOYMENT.md) for hosting guide using:
-- **Vercel** (FREE) - Frontend + Admin Console
-- **Railway** (~$10/month) - Backend services + databases
+## Testing
+- Frontend: `cd frontend/webapp && npm test`
+- Backend (.NET): `dotnet test HeroExchange.sln` (or per project, e.g., `dotnet test tests/BiddingService.Tests/BiddingService.Tests.csproj`, `tests/IdentityService.Tests`)
+- Bots: `cd py-bots && python -m pytest`
 
-## 🎨 Theme
+## Future Improvements
+1) Add integration tests for Gateway routing/Notification SignalR with WebApplicationFactory.
+2) Expand admin console e2e tests (Playwright/Cypress) and secure it behind proper auth.
+3) Harden Identity seeding/guest flow with rate limits and audit logging.
 
-The UI features a dark fantasy RPG aesthetic:
-- Dark backgrounds (`#0b1220`, `#0f172a`)
-- Purple accents (`#8b5cf6`)
-- Amber/gold highlights (`#f59e0b`)
-- Cyan glow effects (`#22d3ee`)
-- Glass panels with blur effects
-- Cinzel font for headings
+## License
+Demo project for portfolio/educational purposes. No warranty.
 
-## 📝 License
-
-Demo project for portfolio purposes. All code provided as-is for educational reference.
-
----
-
-**Note**: This platform uses fictional Gold currency and is intended solely for demonstration purposes.
+## Contact
+- Maintainer: Dion Upton (dionupton@protonmail.com)
+- Live app: https://hero-exchange.live
