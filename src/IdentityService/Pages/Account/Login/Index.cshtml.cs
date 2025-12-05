@@ -51,7 +51,7 @@ public class Index : PageModel
         // Auto-login guest if login_hint=guest (used by "Login as Guest")
         if (string.Equals(context?.LoginHint, "guest", StringComparison.OrdinalIgnoreCase))
         {
-            var guestPassword = Environment.GetEnvironmentVariable("GUEST_PASSWORD") ?? "Guest123$";
+            var guestPassword = Environment.GetEnvironmentVariable("GUEST_PASSWORD") ?? "GuestPassword123!";
             var guest = await _userManager.FindByNameAsync("guest");
             if (guest == null)
             {
