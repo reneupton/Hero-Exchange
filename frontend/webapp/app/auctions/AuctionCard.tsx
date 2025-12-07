@@ -75,9 +75,13 @@ export default function AuctionCard({ auction, character, owned, onSelect }: Pro
           <div className="flex flex-col">
             <h3 className="text-[var(--text)] font-semibold leading-tight">{character.name}</h3>
             <p className="text-xs text-[var(--muted)]">{character.discipline}</p>
-            <p className="text-xs text-[var(--muted)] mt-1">
-              STR {character.stats.strength} · INT {character.stats.intellect} · VIT {character.stats.vitality} · AGI {character.stats.agility}
-            </p>
+            {character.avgSalePrice !== undefined && character.avgSalePrice > 0 ? (
+              <p className="text-xs text-[var(--accent-2)] mt-1">
+                Avg: {character.avgSalePrice.toLocaleString()} gold
+              </p>
+            ) : (
+              <p className="text-xs text-[var(--muted)] italic mt-1">No sales data</p>
+            )}
           </div>
         </div>
       </div>

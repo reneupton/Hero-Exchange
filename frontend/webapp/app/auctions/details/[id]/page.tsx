@@ -80,19 +80,24 @@ export default async function Details({ params }: { params: { id: string } }) {
             {formatGold(data.currentHighBid ?? 0)}
           </span>
         </div>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
-          {[
-            { label: "Strength", value: character.stats.strength },
-            { label: "Intellect", value: character.stats.intellect },
-            { label: "Vitality", value: character.stats.vitality },
-            { label: "Agility", value: character.stats.agility },
-          ].map((stat) => (
-            <div key={stat.label} className="rounded-2xl border border-[var(--card-border)] bg-[rgba(26,32,48,0.6)] px-3 py-2">
-              <div className="text-xs text-[var(--muted)]">{stat.label}</div>
-              <div className="text-lg font-semibold text-[var(--text)]">{stat.value}</div>
+        {/* Average Sale Price */}
+        {character.avgSalePrice !== undefined && character.avgSalePrice > 0 ? (
+          <div className="rounded-2xl border border-[var(--card-border)] bg-[rgba(26,32,48,0.6)] px-4 py-3 mb-4">
+            <div className="text-xs text-[var(--muted)] uppercase tracking-wide">Average Sale Price</div>
+            <div className="flex items-center gap-2 mt-1">
+              <Image src={goldIcon} alt="gold" width={20} height={20} className="object-contain" />
+              <span className="text-xl font-bold text-[var(--accent-2)]">{character.avgSalePrice.toLocaleString()}</span>
+              {character.saleCount !== undefined && character.saleCount > 0 && (
+                <span className="text-xs text-[var(--muted)] ml-2">({character.saleCount} sales)</span>
+              )}
             </div>
-          ))}
-        </div>
+          </div>
+        ) : (
+          <div className="rounded-2xl border border-[var(--card-border)] bg-[rgba(26,32,48,0.6)] px-4 py-3 mb-4">
+            <div className="text-xs text-[var(--muted)] uppercase tracking-wide">Average Sale Price</div>
+            <div className="text-sm text-[var(--muted)] italic mt-1">No sales data yet</div>
+          </div>
+        )}
         <DetailedSpecs auction={data} character={character} />
       </div>
     </div>

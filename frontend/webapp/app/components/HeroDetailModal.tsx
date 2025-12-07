@@ -29,8 +29,6 @@ const deriveBasePath = (cardImage: string) => {
 export default function HeroDetailModal({ hero, onClose, acquiredAt, previousOwners = [] }: Props) {
   if (!hero) return null;
 
-  const totalStats = hero.stats.strength + hero.stats.intellect + hero.stats.vitality + hero.stats.agility;
-
   return (
     <div
       className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-6"
@@ -87,32 +85,31 @@ export default function HeroDetailModal({ hero, onClose, acquiredAt, previousOwn
 
             <div>
               <h2 className="text-2xl font-bold text-[var(--text)]">{hero.name}</h2>
-              <div className="text-xs text-[var(--muted)] font-mono">
-                Total Power: {totalStats}
-              </div>
             </div>
 
             <p className="text-sm text-[var(--muted)]">
               {hero.lore ?? "Legend speaks of this hero's untold potential."}
             </p>
 
-            {/* Stats Grid */}
-            <div className="grid grid-cols-4 gap-2">
-              {[
-                { label: "STR", value: hero.stats.strength },
-                { label: "INT", value: hero.stats.intellect },
-                { label: "VIT", value: hero.stats.vitality },
-                { label: "AGI", value: hero.stats.agility },
-              ].map((stat) => (
-                <div
-                  key={stat.label}
-                  className="rounded-xl border border-[var(--card-border)] bg-[rgba(26,32,48,0.6)] px-3 py-2 text-center"
-                >
-                  <div className="text-xs text-[var(--muted)]">{stat.label}</div>
-                  <div className="text-lg font-semibold text-[var(--text)]">{stat.value}</div>
+            {/* Average Sale Price */}
+            {hero.avgSalePrice !== undefined && hero.avgSalePrice > 0 && (
+              <div className="rounded-xl border border-[var(--card-border)] bg-[rgba(26,32,48,0.6)] px-4 py-3">
+                <div className="text-xs text-[var(--muted)] uppercase tracking-wide">Average Sale Price</div>
+                <div className="flex items-center gap-2 mt-1">
+                  <Image src={goldIcon} alt="gold" width={20} height={20} className="object-contain" />
+                  <span className="text-xl font-bold text-[var(--accent-2)]">{hero.avgSalePrice.toLocaleString()}</span>
+                  {hero.saleCount !== undefined && hero.saleCount > 0 && (
+                    <span className="text-xs text-[var(--muted)] ml-2">({hero.saleCount} sales)</span>
+                  )}
                 </div>
-              ))}
-            </div>
+              </div>
+            )}
+            {(hero.avgSalePrice === undefined || hero.avgSalePrice === 0) && (
+              <div className="rounded-xl border border-[var(--card-border)] bg-[rgba(26,32,48,0.6)] px-4 py-3">
+                <div className="text-xs text-[var(--muted)] uppercase tracking-wide">Average Sale Price</div>
+                <div className="text-sm text-[var(--muted)] italic mt-1">No sales data yet</div>
+              </div>
+            )}
 
             {/* Date Obtained */}
             {acquiredAt && (

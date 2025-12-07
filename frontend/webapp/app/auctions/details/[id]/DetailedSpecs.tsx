@@ -81,13 +81,14 @@ export default function DetailedSpecs({auction, character}: Props) {
                     {character && (
                       <Table.Row className="bg-transparent">
                         <Table.Cell className="whitespace-nowrap font-semibold text-slate-900">
-                          Base Stats
+                          Avg Sale Price
                         </Table.Cell>
-                        <Table.Cell className="space-x-2 text-sm text-slate-800">
-                          <span>STR {character.stats.strength}</span>
-                          <span>INT {character.stats.intellect}</span>
-                          <span>VIT {character.stats.vitality}</span>
-                          <span>AGI {character.stats.agility}</span>
+                        <Table.Cell className="text-sm text-slate-800">
+                          {character.avgSalePrice !== undefined && character.avgSalePrice > 0 ? (
+                            <span>{character.avgSalePrice.toLocaleString()} gold</span>
+                          ) : (
+                            <span className="italic text-slate-500">No sales data</span>
+                          )}
                         </Table.Cell>
                       </Table.Row>
                     )}

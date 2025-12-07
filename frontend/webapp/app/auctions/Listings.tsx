@@ -274,12 +274,7 @@ export default function Listings({ user }: Props) {
     [ownedList, listedHeroIds, listedAuctionImages, normalizeImagePath, getImageKey]
   );
 
-  const totalStats =
-    profile?.totalHeroPower ??
-    ownedList.reduce((sum, c) => {
-      const s = c.stats;
-      return sum + s.strength + s.intellect + s.vitality + s.agility;
-    }, 0);
+  const totalStats = profile?.totalHeroPower ?? 0;
   const derivedLevel = profile?.level ?? Math.max(1, Math.floor(totalStats / 120));
   const nextThreshold = (derivedLevel + 1) * 120;
   const progressPct = nextThreshold ? Math.min(100, Math.round((totalStats / nextThreshold) * 100)) : 0;
@@ -891,12 +886,6 @@ export default function Listings({ user }: Props) {
                   name: hero.name,
                   discipline: hero.discipline as CharacterDefinition['discipline'],
                   rarity: hero.rarity as CharacterDefinition['rarity'],
-                  stats: {
-                    strength: hero.strength,
-                    intellect: hero.intellect,
-                    vitality: hero.vitality,
-                    agility: hero.agility,
-                  },
                   gold: (hero.strength + hero.intellect + hero.vitality + hero.agility) * 10,
                   cardImage: cardImage,
                   lore: catalogHero?.lore,
@@ -1012,19 +1001,24 @@ export default function Listings({ user }: Props) {
                       selected.auction.specs ??
                       "Legend speaks of this hero's untold potential."}
                   </p>
-                  <div className="grid grid-cols-2 gap-2">
-                    {[
-                      { label: 'Strength', value: selected.character.stats.strength },
-                      { label: 'Intellect', value: selected.character.stats.intellect },
-                      { label: 'Vitality', value: selected.character.stats.vitality },
-                      { label: 'Agility', value: selected.character.stats.agility },
-                    ].map((stat) => (
-                      <div key={stat.label} className="rounded-xl border border-[var(--card-border)] bg-[rgba(26,32,48,0.6)] px-3 py-2">
-                        <div className="text-xs text-[var(--muted)]">{stat.label}</div>
-                        <div className="text-lg font-semibold text-[var(--text)]">{stat.value}</div>
+                  {/* Average Sale Price */}
+                  {selected.character.avgSalePrice !== undefined && selected.character.avgSalePrice > 0 ? (
+                    <div className="rounded-xl border border-[var(--card-border)] bg-[rgba(26,32,48,0.6)] px-4 py-3">
+                      <div className="text-xs text-[var(--muted)] uppercase tracking-wide">Average Sale Price</div>
+                      <div className="flex items-center gap-2 mt-1">
+                        <Image src={goldIcon} alt="gold" width={20} height={20} className="object-contain" />
+                        <span className="text-xl font-bold text-[var(--accent-2)]">{selected.character.avgSalePrice.toLocaleString()}</span>
+                        {selected.character.saleCount !== undefined && selected.character.saleCount > 0 && (
+                          <span className="text-xs text-[var(--muted)] ml-2">({selected.character.saleCount} sales)</span>
+                        )}
                       </div>
-                    ))}
-                  </div>
+                    </div>
+                  ) : (
+                    <div className="rounded-xl border border-[var(--card-border)] bg-[rgba(26,32,48,0.6)] px-4 py-3">
+                      <div className="text-xs text-[var(--muted)] uppercase tracking-wide">Average Sale Price</div>
+                      <div className="text-sm text-[var(--muted)] italic mt-1">No sales data yet</div>
+                    </div>
+                  )}
                 </div>
               </div>
               <div className="w-full max-h-[70vh] overflow-auto">

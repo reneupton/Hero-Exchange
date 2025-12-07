@@ -46,12 +46,8 @@ const mockCharacter: CharacterDefinition = {
   rarity: 'Legendary',
   gold: 5200,
   cardImage: '/pets/necromancer/card/frame_0.png',
-  stats: {
-    strength: 42,
-    intellect: 95,
-    vitality: 68,
-    agility: 54,
-  },
+  avgSalePrice: 4800,
+  saleCount: 12,
   lore: 'A powerful necromancer',
 };
 

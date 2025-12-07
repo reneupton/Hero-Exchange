@@ -61,6 +61,71 @@ namespace SearchService
                 totalCount = result.TotalCount
             });
         }
-        
+
+        /// <summary>
+        /// Returns average sale prices grouped by hero name and rarity (Category).
+        /// Only includes sold auctions (SoldAmount > 0).
+        /// </summary>
+        [HttpGet("hero-prices")]
+        public async Task<ActionResult<Dictionary<string, HeroPriceStats>>> GetHeroPrices()
+        {
+            var soldItems = await DB.Find<Item>()
+                .Match(x => x.SoldAmount > 0 && x.Condition == "Hero")
+                .ExecuteAsync();
+
+            var grouped = soldItems
+                .GroupBy(x => new { x.Title, Rarity = x.Category })
+                .Select(g => new
+                {
+                    // Extract base hero name (remove the " #XX" suffix)
+                    HeroName = ExtractHeroName(g.Key.Title),
+                    g.Key.Rarity,
+                    AvgPrice = (int)Math.Round(g.Average(x => x.SoldAmount)),
+                    SaleCount = g.Count(),
+                    MinPrice = g.Min(x => x.SoldAmount),
+                    MaxPrice = g.Max(x => x.SoldAmount)
+                })
+                .GroupBy(x => x.HeroName)
+                .ToDictionary(
+                    g => g.Key,
+                    g => new HeroPriceStats
+                    {
+                        HeroName = g.Key,
+                        RarityPrices = g.ToDictionary(
+                            r => r.Rarity,
+                            r => new RarityPriceInfo
+                            {
+                                AvgPrice = r.AvgPrice,
+                                SaleCount = r.SaleCount,
+                                MinPrice = r.MinPrice,
+                                MaxPrice = r.MaxPrice
+                            }
+                        )
+                    }
+                );
+
+            return Ok(grouped);
+        }
+
+        private static string ExtractHeroName(string title)
+        {
+            // Titles are like "Veyla the Shadow Lich #01", extract the base name
+            var hashIndex = title.LastIndexOf(" #");
+            return hashIndex > 0 ? title[..hashIndex] : title;
+        }
+    }
+
+    public class HeroPriceStats
+    {
+        public string HeroName { get; set; } = "";
+        public Dictionary<string, RarityPriceInfo> RarityPrices { get; set; } = new();
+    }
+
+    public class RarityPriceInfo
+    {
+        public int AvgPrice { get; set; }
+        public int SaleCount { get; set; }
+        public int MinPrice { get; set; }
+        public int MaxPrice { get; set; }
     }
 }

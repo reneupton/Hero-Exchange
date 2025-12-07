@@ -45,3 +45,19 @@ export async function getBidsForAuction(id: string): Promise<Bid[]> {
 export async function placeBidForAuction(auctionId:string, amount: number ) {
     return await fetchWrapper.post(`bids?auctionId=${auctionId}&amount=${amount}`, {})
 }
+
+export type RarityPriceInfo = {
+    avgPrice: number;
+    saleCount: number;
+    minPrice: number;
+    maxPrice: number;
+};
+
+export type HeroPriceStats = {
+    heroName: string;
+    rarityPrices: Record<string, RarityPriceInfo>;
+};
+
+export async function getHeroPrices(): Promise<Record<string, HeroPriceStats>> {
+    return await fetchWrapper.get('search/hero-prices');
+}
