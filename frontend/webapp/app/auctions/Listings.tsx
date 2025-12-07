@@ -17,7 +17,7 @@ import { useProfileStore } from "@/hooks/useProfileStore";
 import Image from "next/image";
 import goldIcon from "@/public/gold2.png";
 import { numberWithCommas } from "../lib/numberWithComma";
-import { claimAchievement as claimAchievementAction, getLeaderboard, getMyProgress, summonHero } from "../actions/gamificationActions";
+import { claimAchievement as claimAchievementAction, claimAchievementReward, getLeaderboard, getMyProgress, summonHero } from "../actions/gamificationActions";
 import { useRouter, useSearchParams } from "next/navigation";
 import LoadingSpinner from "../components/LoadingSpinner";
 import { characterCatalog, CharacterDefinition } from "../data/characterCatalog";
@@ -337,9 +337,10 @@ export default function Listings({ user }: Props) {
     }
 
     setShowAchievementModal(false);
+    const rewardRarity = achievementReward.rarity;
     setAchievementReward(null);
-    // Trigger mystery box opening
-    summonHero(user.username).then((result) => {
+    // Trigger achievement reward (does not affect daily summon timer)
+    claimAchievementReward(rewardRarity).then((result) => {
       if (result?.hero) {
         setSummonedHero({ hero: result.hero, gold: result.goldAwarded, rarity: result.rarity });
         setShowSummonModal(true);

@@ -100,3 +100,22 @@ export async function claimAchievement(achievementId: string): Promise<PlayerPro
     return null;
   }
 }
+
+/**
+ * Claims a hero reward for an achievement (does not affect daily summon timer).
+ */
+export async function claimAchievementReward(rarity: string): Promise<SummonResult | null> {
+  try {
+    const res = await fetchWrapper.post("progress/achievement-reward", { rarity });
+    if ((res as any)?.error) return null;
+    const result = res as { profile: PlayerProfile; hero?: OwnedHero; goldAwarded: number; rarity: string };
+    return {
+      profile: result.profile,
+      hero: result.hero,
+      goldAwarded: result.goldAwarded,
+      rarity: result.rarity,
+    };
+  } catch {
+    return null;
+  }
+}

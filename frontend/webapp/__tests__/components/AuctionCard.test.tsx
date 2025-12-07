@@ -108,7 +108,7 @@ describe('AuctionCard', () => {
       expect(screen.getByText('150')).toBeInTheDocument();
     });
 
-    it('should render character stats', () => {
+    it('should render average sale price when available', () => {
       render(
         <AuctionCard
           auction={mockAuction}
@@ -117,10 +117,22 @@ describe('AuctionCard', () => {
         />
       );
 
-      expect(screen.getByText(/STR 42/)).toBeInTheDocument();
-      expect(screen.getByText(/INT 95/)).toBeInTheDocument();
-      expect(screen.getByText(/VIT 68/)).toBeInTheDocument();
-      expect(screen.getByText(/AGI 54/)).toBeInTheDocument();
+      // The mockCharacter has avgSalePrice: 4800, so it should display "Avg: 4,800 gold"
+      expect(screen.getByText(/Avg:/)).toBeInTheDocument();
+      expect(screen.getByText(/4,800/)).toBeInTheDocument();
+    });
+
+    it('should render "No sales data" when avgSalePrice is not available', () => {
+      const characterNoSales = { ...mockCharacter, avgSalePrice: undefined };
+      render(
+        <AuctionCard
+          auction={mockAuction}
+          character={characterNoSales}
+          onSelect={mockOnSelect}
+        />
+      );
+
+      expect(screen.getByText(/No sales data/)).toBeInTheDocument();
     });
 
     it('should render the countdown timer', () => {

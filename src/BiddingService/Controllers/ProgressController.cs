@@ -92,4 +92,21 @@ public class ProgressController : ControllerBase
         var profile = await progressService.ClaimAchievement(username, request.AchievementId);
         return Ok(profile);
     }
+
+    [Authorize]
+    [HttpPost("achievement-reward")]
+    /// <summary>
+    /// Awards a hero for an achievement claim (does not affect daily summon timer).
+    /// </summary>
+    /// <param name="request">Request containing the rarity of hero to award.</param>
+    /// <returns>Summon result with hero and gold awarded.</returns>
+    public async Task<ActionResult<SummonResultDto>> AchievementReward([FromBody] AchievementRewardDto request)
+    {
+        var username = User.Identity?.Name;
+        if (string.IsNullOrWhiteSpace(username)) return Unauthorized();
+        if (string.IsNullOrWhiteSpace(request?.Rarity)) return BadRequest("rarity is required");
+
+        var result = await progressService.SummonAchievementReward(username, request.Rarity);
+        return Ok(result);
+    }
 }

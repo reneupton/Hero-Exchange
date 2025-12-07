@@ -273,6 +273,57 @@ public class ProgressService
     }
 
     /// <summary>
+    /// Awards a hero with the specified rarity as an achievement reward.
+    /// Does NOT update LastMysteryRewardAt (does not affect daily summon timer).
+    /// </summary>
+    public async Task<SummonResultDto> SummonAchievementReward(string username, string rarity)
+    {
+        var profile = await GetOrCreateProfile(username);
+        profile.OwnedHeroes ??= new List<OwnedHero>();
+        var now = DateTime.UtcNow;
+
+        // Validate rarity
+        var validRarity = rarityWeights.Select(r => r.rarity).Contains(rarity) ? rarity : "Common";
+        var heroVariant = HeroCatalog.GetRandomVariant(rng, validRarity);
+        var gold = goldByRarity[validRarity];
+
+        profile.FlogBalance += gold;
+        var ownedHero = new OwnedHero
+        {
+            HeroId = heroVariant.HeroId,
+            VariantId = heroVariant.VariantId,
+            Name = heroVariant.Name,
+            Discipline = heroVariant.Discipline,
+            Rarity = heroVariant.Rarity,
+            Strength = heroVariant.Strength,
+            Intellect = heroVariant.Intellect,
+            Vitality = heroVariant.Vitality,
+            Agility = heroVariant.Agility,
+            CardImage = heroVariant.CardImage,
+            AcquiredAt = now
+        };
+        profile.OwnedHeroes.Add(ownedHero);
+
+        profile.RecentPurchases ??= new List<string>();
+        profile.RecentPurchases.Insert(0, heroVariant.VariantId);
+        profile.RecentPurchases = profile.RecentPurchases.Take(50).ToList();
+
+        // NOTE: We intentionally do NOT update LastMysteryRewardAt here
+        // so achievement rewards don't affect the daily summon timer
+
+        RefreshLevel(profile);
+        await profile.SaveAsync();
+
+        return new SummonResultDto
+        {
+            Profile = ToDto(profile),
+            Hero = MapOwnedHero(ownedHero),
+            GoldAwarded = gold,
+            Rarity = validRarity
+        };
+    }
+
+    /// <summary>
     /// Returns a leaderboard sorted by total hero power (then level) for the top 10.
     /// </summary>
     public async Task<List<ProgressDto>> GetLeaderboard()

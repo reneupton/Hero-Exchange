@@ -143,9 +143,18 @@ export default function SellHeroModal({ isOpen, onClose, ownedHeroes, preselecte
                       <div className="text-sm font-semibold text-[var(--text)] truncate">{hero.name}</div>
                       <div className="text-xs text-[var(--muted)]">{hero.discipline} · {hero.rarity}</div>
                     </div>
-                    <div className="flex items-center gap-1 text-[var(--accent-2)]">
-                      <Image src={goldIcon} alt="gold" width={16} height={16} className="object-contain" />
-                      <span className="text-sm font-semibold">{hero.gold.toLocaleString()}</span>
+                    <div className="flex flex-col items-end">
+                      <div className="flex items-center gap-1 text-[var(--accent-2)]">
+                        <Image src={goldIcon} alt="gold" width={16} height={16} className="object-contain" />
+                        <span className="text-sm font-semibold">
+                          {hero.avgSalePrice && hero.avgSalePrice > 0
+                            ? hero.avgSalePrice.toLocaleString()
+                            : hero.gold.toLocaleString()}
+                        </span>
+                      </div>
+                      <span className="text-xs text-[var(--muted)]">
+                        {hero.avgSalePrice && hero.avgSalePrice > 0 ? 'avg sale' : 'base value'}
+                      </span>
                     </div>
                   </button>
                 ))}
@@ -163,7 +172,11 @@ export default function SellHeroModal({ isOpen, onClose, ownedHeroes, preselecte
                   <div className="text-sm text-[var(--muted)]">{selectedHero.discipline} · {selectedHero.rarity}</div>
                   <div className="flex items-center gap-1 mt-1 text-[var(--accent-2)]">
                     <Image src={goldIcon} alt="gold" width={16} height={16} className="object-contain" />
-                    <span className="text-sm font-semibold">{selectedHero.gold.toLocaleString()} base value</span>
+                    <span className="text-sm font-semibold">
+                      {selectedHero.avgSalePrice && selectedHero.avgSalePrice > 0
+                        ? `${selectedHero.avgSalePrice.toLocaleString()} avg sale`
+                        : `${selectedHero.gold.toLocaleString()} base value`}
+                    </span>
                   </div>
                 </div>
               </div>
