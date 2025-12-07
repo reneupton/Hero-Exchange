@@ -10,12 +10,13 @@ from tenacity import retry, stop_after_attempt, wait_fixed
 
 from config import Settings
 
-ITEM_CATALOG = [
+# Hero archetypes - rarity is applied dynamically with weighted random selection
+HERO_ARCHETYPES = [
     {
+        "id": "veyla",
         "title": "Veyla the Shadow Lich",
         "brand": "Necromancer",
-        "category": "Legendary",
-        "variant": "INT 95 | STR 42 | VIT 68 | AGI 54",
+        "base_stats": {"str": 42, "int": 95, "vit": 68, "agi": 54},
         "condition": "Hero",
         "colorway": "Arcane",
         "releaseYear": 2025,
@@ -23,10 +24,10 @@ ITEM_CATALOG = [
         "imageUrl": "/pets/craftpix-net-935193-free-chibi-necromancer-of-the-shadow-character-sprites/necromancer_of_the_shadow_1/card/frame_0.png",
     },
     {
+        "id": "elyra",
         "title": "Elyra Nocturne",
         "brand": "Oracle",
-        "category": "Epic",
-        "variant": "INT 88 | STR 34 | VIT 60 | AGI 58",
+        "base_stats": {"str": 34, "int": 88, "vit": 60, "agi": 58},
         "condition": "Hero",
         "colorway": "Umbral",
         "releaseYear": 2025,
@@ -34,10 +35,10 @@ ITEM_CATALOG = [
         "imageUrl": "/pets/craftpix-net-919731-free-chibi-dark-oracle-character-sprites/dark_oracle_1/card/frame_0.png",
     },
     {
+        "id": "morr",
         "title": "Morr Wispblade",
         "brand": "Reaper",
-        "category": "Rare",
-        "variant": "STR 68 | INT 64 | VIT 58 | AGI 72",
+        "base_stats": {"str": 68, "int": 64, "vit": 58, "agi": 72},
         "condition": "Hero",
         "colorway": "Wraith",
         "releaseYear": 2025,
@@ -45,10 +46,10 @@ ITEM_CATALOG = [
         "imageUrl": "/pets/craftpix-904589-free-reaper-man-chibi-2d-game-sprites/reaper_man_1/card/frame_1.png",
     },
     {
+        "id": "sigrun",
         "title": "Sigrun Dawnbreak",
         "brand": "Valkyrie",
-        "category": "Legendary",
-        "variant": "STR 90 | VIT 82 | AGI 70 | INT 48",
+        "base_stats": {"str": 90, "int": 48, "vit": 82, "agi": 70},
         "condition": "Hero",
         "colorway": "Sunsteel",
         "releaseYear": 2025,
@@ -56,10 +57,65 @@ ITEM_CATALOG = [
         "imageUrl": "/pets/craftpix-net-469596-free-chibi-valkyrie-character-sprites/valkyrie_1/card/frame_3.png",
     },
     {
+        "id": "caelys",
+        "title": "Caelys Ember-Crusader",
+        "brand": "Warrior",
+        "base_stats": {"str": 82, "int": 32, "vit": 78, "agi": 52},
+        "condition": "Hero",
+        "colorway": "Emberbone",
+        "releaseYear": 2025,
+        "specs": "Frontline bastion wielding holy fire.",
+        "imageUrl": "/pets/craftpix-net-166787-free-chibi-skeleton-crusader-character-sprites/skeleton_crusader_1/card/frame_0.png",
+    },
+    {
+        "id": "torhild",
+        "title": "Torhild Embercore",
+        "brand": "Guardian",
+        "base_stats": {"str": 88, "int": 28, "vit": 92, "agi": 28},
+        "condition": "Hero",
+        "colorway": "Magma",
+        "releaseYear": 2025,
+        "specs": "Living bulwark of stone and flame.",
+        "imageUrl": "/pets/craftpix-891123-free-golems-chibi-2d-game-sprites/golem_1/card/frame_1.png",
+    },
+    {
+        "id": "frostech",
+        "title": "Frostech Ward",
+        "brand": "Guardian",
+        "base_stats": {"str": 74, "int": 35, "vit": 86, "agi": 32},
+        "condition": "Hero",
+        "colorway": "Frost",
+        "releaseYear": 2025,
+        "specs": "Icebound sentinel, anchors the line.",
+        "imageUrl": "/pets/craftpix-891123-free-golems-chibi-2d-game-sprites/golem_2/card/frame_2.png",
+    },
+    {
+        "id": "grum",
+        "title": "Grum Ironhorn",
+        "brand": "Berserker",
+        "base_stats": {"str": 96, "int": 18, "vit": 88, "agi": 44},
+        "condition": "Hero",
+        "colorway": "Bronze",
+        "releaseYear": 2025,
+        "specs": "Stampeding minotaur, unstoppable charge.",
+        "imageUrl": "/pets/craftpix-net-534656-free-minotaur-chibi-character-sprites/minotaur_1/card/frame_1.png",
+    },
+    {
+        "id": "astrael",
+        "title": "Astrael Fallen",
+        "brand": "Reaper",
+        "base_stats": {"str": 76, "int": 74, "vit": 72, "agi": 66},
+        "condition": "Hero",
+        "colorway": "Celestial",
+        "releaseYear": 2025,
+        "specs": "Winged revenant with twilight scythe.",
+        "imageUrl": "/pets/craftpix-991117-free-fallen-angel-chibi-2d-game-sprites/fallen_angel_1/card/frame_0.png",
+    },
+    {
+        "id": "dresh",
         "title": "Dresh Wildarrow",
         "brand": "Ranger",
-        "category": "Common",
-        "variant": "STR 58 | AGI 68 | VIT 52 | INT 24",
+        "base_stats": {"str": 58, "int": 24, "vit": 52, "agi": 68},
         "condition": "Hero",
         "colorway": "Verdant",
         "releaseYear": 2025,
@@ -67,6 +123,54 @@ ITEM_CATALOG = [
         "imageUrl": "/pets/craftpix-064112-free-orc-ogre-and-goblin-chibi-2d-game-sprites/orc/card/frame_0.png",
     },
 ]
+
+# Rarity weights matching the backend (Common: 65%, Rare: 22%, Epic: 10%, Legendary: 3%)
+RARITY_WEIGHTS = [
+    ("Common", 65),
+    ("Rare", 22),
+    ("Epic", 10),
+    ("Legendary", 3),
+]
+
+# Stat multipliers by rarity
+RARITY_SCALE = {
+    "Common": 0.7,
+    "Rare": 1.0,
+    "Epic": 1.25,
+    "Legendary": 1.5,
+}
+
+
+def pick_weighted_rarity() -> str:
+    """Pick a rarity using weighted random selection."""
+    total = sum(w for _, w in RARITY_WEIGHTS)
+    roll = random.randint(1, total)
+    cumulative = 0
+    for rarity, weight in RARITY_WEIGHTS:
+        cumulative += weight
+        if roll <= cumulative:
+            return rarity
+    return "Common"
+
+
+def create_hero_listing(archetype: dict, rarity: str) -> dict:
+    """Create a hero listing with stats scaled by rarity."""
+    scale = RARITY_SCALE.get(rarity, 1.0)
+    stats = archetype["base_stats"]
+    scaled_stats = {k: int(round(v * scale)) for k, v in stats.items()}
+    variant_str = f"STR {scaled_stats['str']} | INT {scaled_stats['int']} | VIT {scaled_stats['vit']} | AGI {scaled_stats['agi']}"
+
+    return {
+        "title": archetype["title"],
+        "brand": archetype["brand"],
+        "category": rarity,
+        "variant": variant_str,
+        "condition": archetype["condition"],
+        "colorway": archetype["colorway"],
+        "releaseYear": archetype["releaseYear"],
+        "specs": archetype["specs"],
+        "imageUrl": archetype["imageUrl"],
+    }
 
 
 @dataclass
@@ -197,7 +301,9 @@ class AuctionBot:
     async def create_auction(self):
         if len(self.active_auctions) >= self.settings.max_active_auctions_per_bot:
             return
-        item = random.choice(ITEM_CATALOG)
+        archetype = random.choice(HERO_ARCHETYPES)
+        rarity = pick_weighted_rarity()
+        item = create_hero_listing(archetype, rarity)
         end_date = time.time() + 3600 * 24  # 24h from now
         payload = {
             **item,
