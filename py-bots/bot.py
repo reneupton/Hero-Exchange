@@ -332,6 +332,10 @@ class AuctionBot:
 
     async def place_bid(self, auction: Dict):
         auction_id = auction.get("id")
+        status = (auction.get("status") or "").lower()
+        if status and status not in {"active", "live"}:
+            # Avoid errors when the auction has already ended or is not active
+            return
         current = auction.get("currentHighBid", 0)
         next_bid = current + random.randint(5, 25)
         # API expects query params: POST /api/bids?auctionId={id}&amount={amount}
@@ -345,6 +349,10 @@ class AuctionBot:
             if self.log_fn:
                 self.log_fn(self.username, "bid", {"auctionId": auction_id, "amount": next_bid})
         else:
+            message = (resp.text or "").lower()
+            if "auction ended" in message or "ended" in message:
+                # Treat ended auctions as benign to avoid noisy errors
+                return
             self.stats.failures += 1
             self.stats.last_error = resp.text
 
