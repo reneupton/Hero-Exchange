@@ -4,13 +4,20 @@ import { Button } from "flowbite-react";
 import React, { useEffect, useMemo } from "react";
 import { Controller, FieldValues, useForm } from "react-hook-form";
 import Input from "../components/Input";
-import DateInput from "../components/DateInput";
 import { createAuction, updateAuction } from "../actions/auctionActions";
 import { usePathname, useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import { Auction } from "@/types";
 import { getMyProgress } from "../actions/gamificationActions";
 import { useProfileStore } from "@/hooks/useProfileStore";
+
+const DURATION_OPTIONS = [
+  { label: "24 Hours", hours: 24 },
+  { label: "48 Hours", hours: 48 },
+  { label: "7 Days", hours: 24 * 7 },
+  { label: "14 Days", hours: 24 * 14 },
+  { label: "30 Days", hours: 24 * 30 },
+] as const;
 
 type Props = {
   auction?: Auction;
@@ -28,7 +35,7 @@ type FormValues = {
   specs: string;
   imageUrl?: string;
   reservePrice?: number;
-  auctionEnd?: Date;
+  durationHours?: number;
 };
 
 export default function AuctionForm({ auction }: Props) {
@@ -69,6 +76,7 @@ export default function AuctionForm({ auction }: Props) {
       categorySelect: categories[0],
       conditionSelect: conditions[0],
       customCategory: "",
+      durationHours: 24,
     },
   });
 
@@ -124,11 +132,13 @@ export default function AuctionForm({ auction }: Props) {
       };
 
       if (pathname === "/auctions/create") {
+        const auctionEnd = new Date();
+        auctionEnd.setHours(auctionEnd.getHours() + (data.durationHours || 24));
         res = await createAuction({
           ...payload,
           imageUrl: data.imageUrl,
           reservePrice: data.reservePrice ? Number(data.reservePrice) : 0,
-          auctionEnd: data.auctionEnd,
+          auctionEnd,
         });
         id = res.id;
         try {
@@ -278,23 +288,49 @@ export default function AuctionForm({ auction }: Props) {
             rules={{ required: "Image URL is required" }}
           />
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            <Input
+          <Input
             label="Reserve Price in Gold (enter 0 if no reserve)"
-              name="reservePrice"
-              control={control}
-              type="number"
-              rules={{ required: "Reserve price is required" }}
-            />
-            <DateInput
-              label="Auction end date/time"
-              name="auctionEnd"
-              control={control}
-              dateFormat="dd MMMM yyyy h:mm a"
-              showTimeSelect
-              rules={{ required: "Auction end date is required" }}
-            />
-          </div>
+            name="reservePrice"
+            control={control}
+            type="number"
+            rules={{ required: "Reserve price is required" }}
+          />
+
+          <Controller
+            name="durationHours"
+            control={control}
+            rules={{ required: "Duration is required" }}
+            render={({ field, fieldState }) => (
+              <div className="mb-3">
+                <div className="mb-2 block">
+                  <label className="text-sm font-medium" style={{ color: "var(--muted)" }}>
+                    Auction Duration
+                  </label>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {DURATION_OPTIONS.map((opt) => (
+                    <button
+                      key={opt.hours}
+                      type="button"
+                      onClick={() => field.onChange(opt.hours)}
+                      className={`px-4 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 border ${
+                        field.value === opt.hours
+                          ? "bg-gradient-to-r from-[var(--accent)] to-[var(--accent-2)] text-[#0b1220] border-transparent shadow-lg shadow-purple-500/25"
+                          : "bg-[var(--card)] text-[var(--text)] border-[var(--card-border)] hover:border-[var(--accent)] hover:shadow-md"
+                      }`}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+                {fieldState.error && (
+                  <p className="text-xs text-rose-500 mt-1">
+                    {fieldState.error.message}
+                  </p>
+                )}
+              </div>
+            )}
+          />
         </>
       )}
 
