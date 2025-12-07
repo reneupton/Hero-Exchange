@@ -27,16 +27,20 @@ namespace BiddingService.DTOs
         /// </summary>
         public int NextLevelAt { get; set; }
         /// <summary>
-        /// Gold balance (legacy name flogBalance kept for backwards compatibility).
-        /// </summary>
-        [System.Text.Json.Serialization.JsonPropertyName("flogBalance")]
-        public int FlogBalance { get; set; }
-
-        /// <summary>
-        /// Gold balance alias for new clients (admin UI can read goldBalance).
+        /// Gold balance (serialised as goldBalance). Legacy consumers can still read flogBalance via LegacyFlogBalance.
         /// </summary>
         [System.Text.Json.Serialization.JsonPropertyName("goldBalance")]
-        public int GoldBalance => FlogBalance;
+        public int GoldBalance { get; set; }
+
+        /// <summary>
+        /// Legacy field for older clients; maps to GoldBalance.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("flogBalance")]
+        public int LegacyFlogBalance
+        {
+            get => GoldBalance;
+            set => GoldBalance = value;
+        }
         public int TotalHeroPower { get; set; }
         public int AuctionsCreated { get; set; }
         public int AuctionsSold { get; set; }

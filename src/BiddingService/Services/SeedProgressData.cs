@@ -59,7 +59,7 @@ public static class SeedProgressData
                     $"https://api.dicebear.com/7.x/adventurer/png?seed={user}&backgroundType=gradientLinear&radius=40",
                 Experience = xp,
                 Level = Math.Max(1, (xp / 500) + 1),
-                FlogBalance = random.Next(250, 9000),
+                GoldBalance = random.Next(250, 9000),
                 AuctionsCreated = random.Next(2, 40),
                 AuctionsSold = random.Next(1, 30),
                 AuctionsWon = random.Next(0, 20),

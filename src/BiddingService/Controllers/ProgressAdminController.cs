@@ -73,7 +73,7 @@ namespace BiddingService.Controllers
         {
             var user = await FindUser(username);
             if (user == null) return NotFound();
-            if (dto.Delta.HasValue) user.FlogBalance += dto.Delta.Value;
+            if (dto.Delta.HasValue) user.GoldBalance += dto.Delta.Value;
             await user.SaveAsync();
             await _publishEndpoint.Publish(new Contracts.UserProgressAdjusted
             {

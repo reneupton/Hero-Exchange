@@ -1,3 +1,4 @@
+using MongoDB.Bson.Serialization.Attributes;
 using MongoDB.Entities;
 
 // Persistence model for tracking user balances, stats, achievements, and hero inventory in MongoDB.
@@ -9,7 +10,11 @@ public class UserProgress : Entity
     public string AvatarUrl { get; set; }
     public int Experience { get; set; }
     public int Level { get; set; } = 1;
-    public int FlogBalance { get; set; } = 0;
+    /// <summary>
+    /// Gold balance; stored in Mongo under the legacy FlogBalance field to preserve existing data.
+    /// </summary>
+    [BsonElement("FlogBalance")]
+    public int GoldBalance { get; set; } = 0;
     public int AuctionsCreated { get; set; }
     public int AuctionsSold { get; set; }
     public int AuctionsWon { get; set; }

@@ -66,7 +66,7 @@ public class ProgressService
             Username = username,
             AvatarUrl =
                 $"https://api.dicebear.com/7.x/adventurer/png?seed={username}&backgroundType=gradientLinear&radius=40",
-            FlogBalance = 500,
+            GoldBalance = 500,
             Experience = 0,
             Level = 1,
             RecentPurchases = new List<string>(),
@@ -112,7 +112,7 @@ public class ProgressService
             Level = profile.Level,
             Experience = experience,
             NextLevelAt = (profile.Level + 1) * StatsPerLevel,
-            FlogBalance = profile.FlogBalance,
+            GoldBalance = profile.GoldBalance,
             TotalHeroPower = experience,
             AuctionsCreated = profile.AuctionsCreated,
             AuctionsSold = profile.AuctionsSold,
@@ -143,7 +143,7 @@ public class ProgressService
         }
 
         profile.LastDailyReward = DateTime.UtcNow;
-        profile.FlogBalance += 25;
+        profile.GoldBalance += 25;
 
         RefreshLevel(profile);
         await profile.SaveAsync();
@@ -161,7 +161,7 @@ public class ProgressService
         var existingHold = profile.HeldBids.FirstOrDefault(h => h.AuctionId == auctionId);
         var priorAmount = existingHold?.Amount ?? 0;
         var delta = Math.Max(0, amount - priorAmount);
-        profile.FlogBalance = Math.Max(0, profile.FlogBalance - delta);
+        profile.GoldBalance = Math.Max(0, profile.GoldBalance - delta);
 
         if (existingHold != null)
         {
@@ -188,7 +188,7 @@ public class ProgressService
         var profile = await GetOrCreateProfile(username);
 
         profile.AuctionsCreated += 1;
-        profile.FlogBalance += 40;
+        profile.GoldBalance += 40;
 
         RefreshLevel(profile);
         await profile.SaveAsync();
@@ -204,7 +204,7 @@ public class ProgressService
         var profile = await GetOrCreateProfile(username);
 
         profile.AuctionsSold += 1;
-        profile.FlogBalance += CalculateCoinBonus(amount, 0.08, 60);
+        profile.GoldBalance += CalculateCoinBonus(amount, 0.08, 60);
 
         RefreshLevel(profile);
         await profile.SaveAsync();
@@ -220,7 +220,7 @@ public class ProgressService
         var profile = await GetOrCreateProfile(username);
 
         profile.AuctionsWon += 1;
-        profile.FlogBalance += CalculateCoinBonus(amount, 0.05, 40);
+        profile.GoldBalance += CalculateCoinBonus(amount, 0.05, 40);
 
         RefreshLevel(profile);
         await profile.SaveAsync();
@@ -287,7 +287,7 @@ public class ProgressService
         var heroVariant = HeroCatalog.GetRandomVariant(rng, validRarity);
         var gold = goldByRarity[validRarity];
 
-        profile.FlogBalance += gold;
+        profile.GoldBalance += gold;
         var ownedHero = new OwnedHero
         {
             HeroId = heroVariant.HeroId,
@@ -361,7 +361,7 @@ public class ProgressService
 
             if (!string.Equals(profile.Username, winner, StringComparison.OrdinalIgnoreCase))
             {
-                profile.FlogBalance += hold.Amount;
+                profile.GoldBalance += hold.Amount;
             }
 
             await profile.SaveAsync();
@@ -391,7 +391,7 @@ public class ProgressService
         var heroVariant = HeroCatalog.GetRandomVariant(rng, rarity);
         var gold = goldByRarity[rarity];
 
-        profile.FlogBalance += gold;
+        profile.GoldBalance += gold;
         var ownedHero = new OwnedHero
         {
             HeroId = heroVariant.HeroId,
