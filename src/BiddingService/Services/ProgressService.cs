@@ -43,7 +43,7 @@ public class ProgressService
             profile.RecentPurchases ??= new List<string>();
             profile.RecentSales ??= new List<string>();
             profile.HeldBids ??= new List<HeldBid>();
-            await EnsureStarterPack(profile);
+            await EnsureStarterHeroes(profile);
             return profile;
         }
 
@@ -56,7 +56,7 @@ public class ProgressService
             profile.RecentPurchases ??= new List<string>();
             profile.RecentSales ??= new List<string>();
             profile.HeldBids ??= new List<HeldBid>();
-            await EnsureStarterPack(profile);
+            await EnsureStarterHeroes(profile);
             return profile;
         }
 
@@ -66,7 +66,7 @@ public class ProgressService
             Username = username,
             AvatarUrl =
                 $"https://api.dicebear.com/7.x/adventurer/png?seed={username}&backgroundType=gradientLinear&radius=40",
-            GoldBalance = 500,
+            GoldBalance = 1000,
             Experience = 0,
             Level = 1,
             RecentPurchases = new List<string>(),
@@ -75,7 +75,7 @@ public class ProgressService
             OwnedHeroes = new List<OwnedHero>()
         };
 
-        await EnsureStarterPack(profile);
+        await EnsureStarterHeroes(profile);
         await profile.SaveAsync();
         return profile;
     }
@@ -128,6 +128,92 @@ public class ProgressService
             OwnedHeroes = profile.OwnedHeroes.Select(MapOwnedHero).ToList(),
             ClaimedAchievements = profile.ClaimedAchievements
         };
+    }
+
+    /// <summary>
+    /// Ensures a new or existing profile has starter heroes and starter gold.
+    /// - Adds 5 random common heroes if fewer than 5 exist.
+    /// - Preserves legacy starter bundle for whitelisted users when empty.
+    /// - Sets minimum gold to 1000.
+    /// </summary>
+    private async Task EnsureStarterHeroes(UserProgress profile)
+    {
+        profile.OwnedHeroes ??= new List<OwnedHero>();
+
+        // Legacy starter bundle for specific users if they have no heroes.
+        var starterUsers = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        {
+            "test",
+            "Dion Upton"
+        };
+
+        if (!profile.OwnedHeroes.Any() && starterUsers.Contains(profile.Username))
+        {
+            var starterChoices = new (string heroId, string rarity)[]
+            {
+                ("elyra", "Epic"),
+                ("grum", "Legendary"),
+                ("dresh", "Common"),
+                ("sigrun", "Rare")
+            };
+
+            foreach (var (heroId, rarity) in starterChoices)
+            {
+                var variant = HeroCatalog.GetVariant(heroId, rarity);
+                if (variant == null) continue;
+
+                profile.OwnedHeroes.Add(new OwnedHero
+                {
+                    HeroId = variant.HeroId,
+                    VariantId = variant.VariantId,
+                    Name = variant.Name,
+                    Discipline = variant.Discipline,
+                    Rarity = variant.Rarity,
+                    Strength = variant.Strength,
+                    Intellect = variant.Intellect,
+                    Vitality = variant.Vitality,
+                    Agility = variant.Agility,
+                    CardImage = variant.CardImage,
+                    AcquiredAt = DateTime.UtcNow
+                });
+                profile.RecentPurchases ??= new List<string>();
+                profile.RecentPurchases.Insert(0, variant.VariantId);
+            }
+        }
+
+        // Ensure 5 common heroes minimum for everyone.
+        if (profile.OwnedHeroes.Count < 5)
+        {
+            var missing = 5 - profile.OwnedHeroes.Count;
+            var candidates = HeroCatalog.CommonHeroes();
+            for (int i = 0; i < missing; i++)
+            {
+                var hero = candidates[rng.Next(candidates.Count)];
+                profile.OwnedHeroes.Add(new OwnedHero
+                {
+                    HeroId = hero.HeroId,
+                    VariantId = hero.VariantId,
+                    Name = hero.Name,
+                    Discipline = hero.Discipline,
+                    Rarity = hero.Rarity,
+                    Strength = hero.Strength,
+                    Intellect = hero.Intellect,
+                    Vitality = hero.Vitality,
+                    Agility = hero.Agility,
+                    CardImage = hero.CardImage,
+                    AcquiredAt = DateTime.UtcNow
+                });
+            }
+        }
+
+        // backfill starter gold if migrated from legacy default
+        if (profile.GoldBalance < 1000)
+        {
+            profile.GoldBalance = 1000;
+        }
+
+        RefreshLevel(profile);
+        await profile.SaveAsync();
     }
 
     /// <summary>
@@ -470,54 +556,4 @@ public class ProgressService
         };
     }
 
-    private static async Task EnsureStarterPack(UserProgress profile)
-    {
-        var starterUsers = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
-        {
-            "test",
-            "Dion Upton"
-        };
-
-        if (!starterUsers.Contains(profile.Username)) return;
-
-        profile.OwnedHeroes ??= new List<OwnedHero>();
-        if (profile.OwnedHeroes.Any())
-        {
-            return;
-        }
-
-        var starterChoices = new (string heroId, string rarity)[]
-        {
-            ("elyra", "Epic"),
-            ("grum", "Legendary"),
-            ("dresh", "Common"),
-            ("sigrun", "Rare")
-        };
-
-        foreach (var (heroId, rarity) in starterChoices)
-        {
-            var variant = HeroCatalog.GetVariant(heroId, rarity);
-            if (variant == null) continue;
-
-            profile.OwnedHeroes.Add(new OwnedHero
-            {
-                HeroId = variant.HeroId,
-                VariantId = variant.VariantId,
-                Name = variant.Name,
-                Discipline = variant.Discipline,
-                Rarity = variant.Rarity,
-                Strength = variant.Strength,
-                Intellect = variant.Intellect,
-                Vitality = variant.Vitality,
-                Agility = variant.Agility,
-                CardImage = variant.CardImage,
-                AcquiredAt = DateTime.UtcNow
-            });
-            profile.RecentPurchases ??= new List<string>();
-            profile.RecentPurchases.Insert(0, variant.VariantId);
-        }
-
-        RefreshLevel(profile);
-        await profile.SaveAsync();
-    }
 }
