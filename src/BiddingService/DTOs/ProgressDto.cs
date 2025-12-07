@@ -6,12 +6,36 @@ namespace BiddingService.DTOs
     /// </summary>
     public class ProgressDto
     {
+        /// <summary>
+        /// Username of the player.
+        /// </summary>
         public string Username { get; set; }
+        /// <summary>
+        /// Avatar image URL.
+        /// </summary>
         public string AvatarUrl { get; set; }
+        /// <summary>
+        /// Current level.
+        /// </summary>
         public int Level { get; set; }
+        /// <summary>
+        /// Total experience earned.
+        /// </summary>
         public int Experience { get; set; }
+        /// <summary>
+        /// XP required for next level.
+        /// </summary>
         public int NextLevelAt { get; set; }
+        /// <summary>
+        /// Gold balance (legacy name flogBalance kept for backwards compatibility).
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("flogBalance")]
         public int FlogBalance { get; set; }
+
+        /// <summary>
+        /// Gold balance alias for new clients (admin UI can read goldBalance).
+        /// </summary>
+        [System.Text.Json.Serialization.JsonPropertyName("goldBalance")]
         public int GoldBalance => FlogBalance;
         public int TotalHeroPower { get; set; }
         public int AuctionsCreated { get; set; }
