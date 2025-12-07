@@ -100,7 +100,7 @@ public class ProgressService
         return Math.Max(minimum, (int)Math.Round(raw));
     }
 
-    private static ProgressDto ToDto(UserProgress profile)
+    internal static ProgressDto ToDto(UserProgress profile)
     {
         profile.OwnedHeroes ??= new List<OwnedHero>();
         profile.ClaimedAchievements ??= new List<string>();

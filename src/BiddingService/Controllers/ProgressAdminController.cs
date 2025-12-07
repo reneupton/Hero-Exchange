@@ -20,10 +20,14 @@ namespace BiddingService.Controllers
         /// Creates the admin controller for progress operations.
         /// </summary>
         /// <param name="publishEndpoint">Bus publisher for progress-related events.</param>
-        public ProgressAdminController(IPublishEndpoint publishEndpoint)
+        /// <param name="progressService">Progress service for DTO mapping and starter logic.</param>
+        public ProgressAdminController(IPublishEndpoint publishEndpoint, ProgressService progressService)
         {
             _publishEndpoint = publishEndpoint;
+            ProgressService = progressService;
         }
+
+        private ProgressService ProgressService { get; }
 
         /// <summary>
         /// Finds a user by ID or username field.
@@ -44,32 +48,32 @@ namespace BiddingService.Controllers
         /// <summary>
         /// Lists users with paging.
         /// </summary>
-        public async Task<ActionResult<IEnumerable<UserProgress>>> GetUsers([FromQuery] int page = 1, [FromQuery] int pageSize = 50)
+        public async Task<ActionResult<IEnumerable<ProgressDto>>> GetUsers([FromQuery] int page = 1, [FromQuery] int pageSize = 50)
         {
             var skip = Math.Max(0, (page - 1) * pageSize);
             var users = await DB.Find<UserProgress>()
                 .Skip(skip)
                 .Limit(pageSize)
                 .ExecuteAsync();
-            return Ok(users);
+            return Ok(users.Select(ProgressService.ToDto));
         }
 
         [HttpGet("users/{username}")]
         /// <summary>
         /// Fetches a single user by id/username.
         /// </summary>
-        public async Task<ActionResult<UserProgress>> GetUser(string username)
+        public async Task<ActionResult<ProgressDto>> GetUser(string username)
         {
             var user = await FindUser(username);
             if (user == null) return NotFound();
-            return Ok(user);
+            return Ok(ProgressService.ToDto(user));
         }
 
         [HttpPost("users/{username}/balance")]
         /// <summary>
         /// Adjusts coin balance and publishes an adjustment event.
         /// </summary>
-        public async Task<ActionResult<UserProgress>> AdjustBalance(string username, [FromBody] AdminAdjustDto dto)
+        public async Task<ActionResult<ProgressDto>> AdjustBalance(string username, [FromBody] AdminAdjustDto dto)
         {
             var user = await FindUser(username);
             if (user == null) return NotFound();
@@ -81,14 +85,14 @@ namespace BiddingService.Controllers
                 BalanceDelta = dto.Delta,
                 UpdatedBy = "admin"
             });
-            return Ok(user);
+            return Ok(ProgressService.ToDto(user));
         }
 
         [HttpPost("users/{username}/xp")]
         /// <summary>
         /// Adjusts XP/Level and publishes an adjustment event.
         /// </summary>
-        public async Task<ActionResult<UserProgress>> AdjustXp(string username, [FromBody] AdminAdjustDto dto)
+        public async Task<ActionResult<ProgressDto>> AdjustXp(string username, [FromBody] AdminAdjustDto dto)
         {
             var user = await FindUser(username);
             if (user == null) return NotFound();
@@ -102,14 +106,14 @@ namespace BiddingService.Controllers
                 Level = dto.Level,
                 UpdatedBy = "admin"
             });
-            return Ok(user);
+            return Ok(ProgressService.ToDto(user));
         }
 
         [HttpPost("users/{username}/avatar")]
         /// <summary>
         /// Sets avatar URL and emits an avatar updated event.
         /// </summary>
-        public async Task<ActionResult<UserProgress>> SetAvatar(string username, [FromBody] AdminAdjustDto dto)
+        public async Task<ActionResult<ProgressDto>> SetAvatar(string username, [FromBody] AdminAdjustDto dto)
         {
             var user = await FindUser(username);
             if (user == null) return NotFound();
