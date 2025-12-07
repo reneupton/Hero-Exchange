@@ -355,3 +355,13 @@ body {
     box-shadow: 0 12px 28px rgba(0, 0, 0, 0.4);
   }
 }
+
+/* Achievement claimable glow animation */
+@keyframes glow {
+  0%, 100% {
+    box-shadow: 0 0 12px rgba(245, 158, 11, 0.5);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(245, 158, 11, 0.8), 0 0 30px rgba(249, 115, 22, 0.4);
+  }
+}

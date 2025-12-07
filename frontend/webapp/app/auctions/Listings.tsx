@@ -753,10 +753,10 @@ export default function Listings({ user }: Props) {
                   return (
                     <div
                       key={achievement.id}
-                      className={`rounded-2xl border px-3 py-2 transition-all ${
+                      className={`rounded-2xl border-2 px-3 py-2 transition-all ${
                         canClaim
-                          ? `${rarityBorders[achievement.reward]} bg-gradient-to-r from-amber-50/90 to-orange-50/90 animate-pulse`
-                          : "border-white/60 bg-white/80"
+                          ? `${rarityBorders[achievement.reward]} bg-white/90 shadow-[0_0_12px_rgba(245,158,11,0.5)] animate-[glow_1.5s_ease-in-out_infinite]`
+                          : "border border-white/60 bg-white/80"
                       }`}
                     >
                       <div className="flex items-center justify-between text-sm text-slate-800">
