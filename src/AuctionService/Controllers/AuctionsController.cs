@@ -1,5 +1,5 @@
 // Public auction endpoints for browsing, creating, updating, and deleting auctions.
-﻿using AuctionService.Data;
+using AuctionService.Data;
 using AuctionService.DTOs;
 using AuctionService.Entities;
 using AutoMapper;
@@ -7,7 +7,7 @@ using AutoMapper.QueryableExtensions;
 using Contracts;
 using MassTransit;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -20,6 +20,7 @@ public class AuctionsController : ControllerBase
     private readonly AuctionDbContext _context;
     private readonly IMapper _mapper;
     private readonly IPublishEndpoint _publishEndpoint;
+    private readonly ILogger<AuctionsController> _logger;
 
     /// <summary>
     /// Creates a controller for auction CRUD and event publishing.
@@ -27,28 +28,48 @@ public class AuctionsController : ControllerBase
     /// <param name="context">EF Core DbContext for auction storage.</param>
     /// <param name="mapper">Automapper instance for DTO/entity mapping.</param>
     /// <param name="publishEndpoint">Bus publisher for auction lifecycle events.</param>
-    public AuctionsController(AuctionDbContext context, IMapper mapper, IPublishEndpoint publishEndpoint)
+    /// <param name="logger">Structured logger for error visibility.</param>
+    public AuctionsController(AuctionDbContext context, IMapper mapper, IPublishEndpoint publishEndpoint, ILogger<AuctionsController> logger)
     {
         _context = context;
         _mapper = mapper;
         _publishEndpoint = publishEndpoint;
+        _logger = logger;
     }
 
     [HttpGet]
     /// <summary>
-    /// Returns all auctions optionally filtered by updated date.
+    /// Returns all auctions optionally filtered by updated date or status.
     /// </summary>
     /// <param name="date">Optional ISO/UTC date string; returns auctions updated after this.</param>
-    public async Task<ActionResult<List<AuctionDto>>> GetAllAuctions(string date)
+    /// <param name="filter">Optional status filter, e.g. "live".</param>
+    /// <param name="pageSize">Optional limit on records returned (default 50, max 200).</param>
+    public async Task<ActionResult<List<AuctionDto>>> GetAllAuctions([FromQuery] string date, [FromQuery] string filter, [FromQuery] int pageSize = 50)
     {
-        var query = _context.Auctions.OrderBy(x => x.Item.Title).AsQueryable();
-
-        if (!string.IsNullOrEmpty(date))
+        try
         {
-            query = query.Where(x => x.UpdatedAt.CompareTo(DateTime.Parse(date).ToUniversalTime()) > 0);
-        }
+            var query = _context.Auctions.Include(x => x.Item).OrderBy(x => x.Item.Title).AsQueryable();
 
-        return await query.ProjectTo<AuctionDto>(_mapper.ConfigurationProvider).ToListAsync();
+            if (!string.IsNullOrEmpty(date))
+            {
+                query = query.Where(x => x.UpdatedAt.CompareTo(DateTime.Parse(date).ToUniversalTime()) > 0);
+            }
+
+            if (!string.IsNullOrWhiteSpace(filter) && filter.Equals("live", StringComparison.OrdinalIgnoreCase))
+            {
+                query = query.Where(x => x.Status == Status.Live && x.AuctionEnd > DateTime.UtcNow);
+            }
+
+            var size = Math.Clamp(pageSize, 1, 200);
+            query = query.Take(size);
+
+            return await query.ProjectTo<AuctionDto>(_mapper.ConfigurationProvider).ToListAsync();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to fetch auctions with filter {Filter} and date {Date}", filter, date);
+            return StatusCode(StatusCodes.Status500InternalServerError, "Failed to fetch auctions");
+        }
     }
 
     [HttpGet("{id}")]
@@ -73,14 +94,14 @@ public class AuctionsController : ControllerBase
     /// </summary>
     public async Task<ActionResult<AuctionDto>> CreateAuction(CreateAuctionDto auctionDto)
     {
-            // Explicitly specify the AuctionEnd to be UTC
+        // Explicitly specify the AuctionEnd to be UTC
         auctionDto.AuctionEnd = DateTime.SpecifyKind(auctionDto.AuctionEnd, DateTimeKind.Utc);
         var auction = _mapper.Map<Auction>(auctionDto);
-        
+
         auction.Seller = User.Identity.Name;
 
         _context.Auctions.Add(auction);
-        
+
         var newAuction = _mapper.Map<AuctionDto>(auction);
 
         await _publishEndpoint.Publish(_mapper.Map<AuctionCreated>(newAuction));
@@ -103,8 +124,8 @@ public class AuctionsController : ControllerBase
             .FirstOrDefaultAsync(x => x.Id == id);
 
         if (auction == null) return NotFound();
-        
-        if(auction.Seller != User.Identity.Name) return Forbid();
+
+        if (auction.Seller != User.Identity.Name) return Forbid();
 
         auction.Item.Title = updateAuctionDto.Title ?? auction.Item.Title;
         auction.Item.Brand = updateAuctionDto.Brand ?? auction.Item.Brand;
@@ -114,7 +135,7 @@ public class AuctionsController : ControllerBase
         auction.Item.Colorway = updateAuctionDto.Colorway ?? auction.Item.Colorway;
         auction.Item.ReleaseYear = updateAuctionDto.ReleaseYear ?? auction.Item.ReleaseYear;
         auction.Item.Specs = updateAuctionDto.Specs ?? auction.Item.Specs;
-        
+
         await _publishEndpoint.Publish(_mapper.Map<AuctionUpdated>(auction));
 
         var result = await _context.SaveChangesAsync() > 0;
@@ -134,17 +155,16 @@ public class AuctionsController : ControllerBase
         var auction = await _context.Auctions.FindAsync(id);
 
         if (auction == null) return NotFound();
-        
-        if(auction.Seller != User.Identity.Name) return Forbid();
+
+        if (auction.Seller != User.Identity.Name) return Forbid();
 
         _context.Auctions.Remove(auction);
-        
-        await _publishEndpoint.Publish<AuctionDeleted>(new {id = auction.Id.ToString()});
+
+        await _publishEndpoint.Publish<AuctionDeleted>(new { id = auction.Id.ToString() });
         var result = await _context.SaveChangesAsync() > 0;
 
         if (!result) return BadRequest("Could not remove from DB");
 
         return Ok();
     }
-    
 }
