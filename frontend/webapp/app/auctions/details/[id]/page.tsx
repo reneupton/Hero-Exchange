@@ -20,8 +20,17 @@ export default async function Details({ params }: { params: { id: string } }) {
   const data = await getDetailedViewData(params.id);
   const user = await getCurrentUser();
   const isLive = data.status?.toLowerCase() === "live";
-  const hash = Array.from(data.id).reduce((acc, ch) => acc + ch.charCodeAt(0), 0);
-  const character = characterCatalog[Math.abs(hash) % characterCatalog.length];
+
+  // Find character by name and rarity (variant) from auction data
+  const character = characterCatalog.find(
+    (c) => c.name === data.title && c.rarity === data.variant
+  ) ?? characterCatalog.find(
+    (c) => c.name === data.title
+  ) ?? (() => {
+    // Fallback to hash-based selection for legacy auctions
+    const hash = Array.from(data.id).reduce((acc, ch) => acc + ch.charCodeAt(0), 0);
+    return characterCatalog[Math.abs(hash) % characterCatalog.length];
+  })();
 
   return (
     <div className="space-y-6">

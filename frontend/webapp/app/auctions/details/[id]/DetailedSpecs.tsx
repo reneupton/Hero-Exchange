@@ -59,11 +59,10 @@ export default function DetailedSpecs({auction, character}: Props) {
                 {rows.map((row, idx) => (
                     <div key={idx} className="flex items-center px-4 py-3">
                         <div className="w-28 flex-shrink-0 font-semibold text-[var(--text)] flex items-center gap-2">
-                            {row.icon}
                             {row.label}
                         </div>
                         <div className="flex-1 text-[var(--muted)] flex items-center gap-2">
-                            {row.icon && <Image src={goldIcon} alt="gold" width={16} height={16} className="object-contain" />}
+                            {row.icon}
                             {row.value}
                         </div>
                     </div>
