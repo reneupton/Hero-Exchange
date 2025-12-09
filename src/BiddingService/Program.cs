@@ -67,7 +67,16 @@ app.MapControllers();
 await Policy.Handle<TimeoutException>()
         .WaitAndRetryAsync(5, retryAttempt => TimeSpan.FromSeconds(10))
         .ExecuteAndCaptureAsync(async () => {
-            await DB.InitAsync("BidDb", MongoClientSettings.FromConnectionString(builder.Configuration.GetConnectionString("BidDbConnection")));
+            var connectionString = builder.Configuration.GetConnectionString("BidDbConnection");
+            var settings = MongoClientSettings.FromConnectionString(connectionString);
+
+            // Aggressive connection pool settings for Railway Serverless compatibility
+            // Close idle connections after 60 seconds to allow service to sleep
+            settings.MaxConnectionIdleTime = TimeSpan.FromSeconds(60);
+            settings.MinConnectionPoolSize = 0; // Allow pool to shrink to 0
+            settings.MaxConnectionPoolSize = 10; // Limit max connections
+
+            await DB.InitAsync("BidDb", settings);
         });
 
 // TTL index: auto-delete bids older than 30 days

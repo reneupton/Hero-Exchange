@@ -10,8 +10,16 @@ public static class DbInitialiser
 {
     public static async Task InitDb(WebApplication app)
     {
-        await DB.InitAsync("SearchDb",
-            MongoClientSettings.FromConnectionString(app.Configuration.GetConnectionString("MongoDbConnection")));
+        var connectionString = app.Configuration.GetConnectionString("MongoDbConnection");
+        var settings = MongoClientSettings.FromConnectionString(connectionString);
+
+        // Aggressive connection pool settings for Railway Serverless compatibility
+        // Close idle connections after 60 seconds to allow service to sleep
+        settings.MaxConnectionIdleTime = TimeSpan.FromSeconds(60);
+        settings.MinConnectionPoolSize = 0; // Allow pool to shrink to 0
+        settings.MaxConnectionPoolSize = 10; // Limit max connections
+
+        await DB.InitAsync("SearchDb", settings);
 
         await DB.Index<Item>()
             .Key(x => x.Title, KeyType.Text)
