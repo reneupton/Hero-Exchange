@@ -385,21 +385,21 @@ export default function Listings({ user }: Props) {
 
   function setWinner(){
     if(!user?.username) return;
-    // Toggle: if already active, clear the filter
+    // Toggle: if already active, clear only the winner filter
     if (winnerActive) {
-      setParams({winner: undefined, filterBy: undefined});
+      setParams({winner: undefined});
     } else {
-      setParams({winner: user.username, seller: undefined, filterBy: 'finished'});
+      setParams({winner: user.username, seller: undefined});
     }
   }
 
   function setSeller(){
     if(!user?.username) return;
-    // Toggle: if already active, clear the filter
+    // Toggle: if already active, clear only the seller filter
     if (sellerActive) {
-      setParams({seller: undefined, filterBy: undefined});
+      setParams({seller: undefined});
     } else {
-      setParams({seller: user.username, winner: undefined, filterBy: 'live'});
+      setParams({seller: user.username, winner: undefined});
     }
   }
 
