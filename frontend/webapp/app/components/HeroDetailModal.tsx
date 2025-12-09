@@ -3,6 +3,7 @@
 
 import React from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { CharacterDefinition } from "../data/characterCatalog";
 import goldIcon from "@/public/gold2.png";
 import AnimatedHeroSprite from "./AnimatedHeroSprite";
@@ -12,6 +13,7 @@ type Props = {
   onClose: () => void;
   acquiredAt?: string;
   previousOwners?: string[];
+  auctionId?: string;
 };
 
 const rarityTone: Record<CharacterDefinition["rarity"], string> = {
@@ -26,7 +28,7 @@ const deriveBasePath = (cardImage: string) => {
   return match ? match[1] : "";
 };
 
-export default function HeroDetailModal({ hero, onClose, acquiredAt, previousOwners = [] }: Props) {
+export default function HeroDetailModal({ hero, onClose, acquiredAt, previousOwners = [], auctionId }: Props) {
   if (!hero) return null;
 
   return (
@@ -145,6 +147,17 @@ export default function HeroDetailModal({ hero, onClose, acquiredAt, previousOwn
                 <div className="text-xs text-[var(--muted)] uppercase tracking-wide">Previous Owners</div>
                 <div className="text-sm text-[var(--muted)] italic">Original owner</div>
               </div>
+            )}
+
+            {/* View Listing Button */}
+            {auctionId && (
+              <Link
+                href={`/auctions/details/${auctionId}`}
+                onClick={onClose}
+                className="soft-button w-full text-center py-3 rounded-xl font-semibold mt-2"
+              >
+                View Listing
+              </Link>
             )}
           </div>
         </div>

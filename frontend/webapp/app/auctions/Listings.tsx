@@ -178,7 +178,7 @@ export default function Listings({ user }: Props) {
   const winnerActive = params.winner === user?.username;
   const [selected, setSelected] = useState<{ auction: Auction; character: CharacterDefinition } | null>(null);
   const [sellPreselectedHero, setSellPreselectedHero] = useState<CharacterDefinition | null>(null);
-  const [selectedCollectionHero, setSelectedCollectionHero] = useState<{ character: CharacterDefinition; acquiredAt?: string } | null>(null);
+  const [selectedCollectionHero, setSelectedCollectionHero] = useState<{ character: CharacterDefinition; acquiredAt?: string; auctionId?: string } | null>(null);
   const { isOpen: sellModalOpen, closeModal: closeSellModal, openModal: openSellModal } = useSellModalStore();
   const [userLiveAuctions, setUserLiveAuctions] = useState<Auction[]>([]);
 
@@ -259,7 +259,33 @@ export default function Listings({ user }: Props) {
   }, [combined, params.discipline, params.rarity]);
 
   // Use profile.ownedHeroes directly for display (has cardImage from backend)
-  const ownedHeroesList = profile?.ownedHeroes ?? [];
+  // De-duplicate by variantId to prevent showing the same hero twice
+  const ownedHeroesList = useMemo(() => {
+    const raw = profile?.ownedHeroes ?? [];
+    const seen = new Set<string>();
+    return raw.filter((h) => {
+      if (seen.has(h.variantId)) return false;
+      seen.add(h.variantId);
+      return true;
+    });
+  }, [profile?.ownedHeroes]);
+
+  // Map from hero variantId/imageKey to auctionId for "Go to Listing" feature
+  const heroToAuctionId = useMemo(() => {
+    const map = new Map<string, string>();
+    activeUserAuctions.forEach((auction) => {
+      const character = resolveAuctionCharacter(auction);
+      if (character) {
+        map.set(character.id, auction.id);
+      }
+      const normalized = normalizeImagePath(auction.imageUrl);
+      const baseKey = getImageKey(auction.imageUrl);
+      if (normalized) map.set(normalized, auction.id);
+      if (baseKey) map.set(baseKey, auction.id);
+    });
+    return map;
+  }, [activeUserAuctions, resolveAuctionCharacter, normalizeImagePath, getImageKey]);
+
   // Also keep catalog-based list for compatibility with SellHeroModal
   const ownedList = characterCatalog.filter((c) => ownedIds.has(c.id));
 
@@ -359,12 +385,22 @@ export default function Listings({ user }: Props) {
 
   function setWinner(){
     if(!user?.username) return;
-    setParams({winner: user.username, seller: undefined, filterBy: 'finished'})
+    // Toggle: if already active, clear the filter
+    if (winnerActive) {
+      setParams({winner: undefined, filterBy: undefined});
+    } else {
+      setParams({winner: user.username, seller: undefined, filterBy: 'finished'});
+    }
   }
-  
+
   function setSeller(){
     if(!user?.username) return;
-    setParams({seller: user.username, winner: undefined, filterBy: 'live'})
+    // Toggle: if already active, clear the filter
+    if (sellerActive) {
+      setParams({seller: undefined, filterBy: undefined});
+    } else {
+      setParams({seller: user.username, winner: undefined, filterBy: 'live'});
+    }
   }
 
   const formatShortId = (id: string) => id.replace(/-/g, '').slice(0, 8).toUpperCase();
@@ -881,6 +917,11 @@ export default function Listings({ user }: Props) {
                   listedAuctionImages.has(normalizedCardPath) ||
                   listedAuctionImages.has(baseCardKey);
 
+                // Find auction ID if hero is listed
+                const listedAuctionId = heroToAuctionId.get(hero.variantId)
+                  || heroToAuctionId.get(normalizedCardPath)
+                  || heroToAuctionId.get(baseCardKey);
+
                 // Convert OwnedHero to CharacterDefinition for modal/sell compatibility
                 const heroAsCharacter: CharacterDefinition = {
                   id: hero.variantId,
@@ -894,7 +935,7 @@ export default function Listings({ user }: Props) {
                 return (
                 <div
                   key={hero.variantId}
-                  onClick={() => setSelectedCollectionHero({ character: heroAsCharacter, acquiredAt: hero.acquiredAt })}
+                  onClick={() => setSelectedCollectionHero({ character: heroAsCharacter, acquiredAt: hero.acquiredAt, auctionId: listedAuctionId })}
                   className={`relative rounded-xl border-2 bg-[rgba(26,32,48,0.65)] p-2 cursor-pointer transition-all duration-200 hover:scale-95 hover:brightness-110 ${getRarityBorder(hero.rarity)}`}
                 >
                   {heroIsListed && (
@@ -1045,6 +1086,7 @@ export default function Listings({ user }: Props) {
         onClose={() => setSelectedCollectionHero(null)}
         acquiredAt={selectedCollectionHero?.acquiredAt}
         previousOwners={[]}
+        auctionId={selectedCollectionHero?.auctionId}
       />
 
       {/* Achievement Claim Modal */}
