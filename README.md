@@ -23,12 +23,6 @@ Dark-fantasy hero marketplace built as a portfolio-grade microservices demo. Col
 - Admin: adjust balances/XP, manage auctions, reindex search.
 - Bots: Python bot service to simulate listings/bids.
 
-## Screenshots / GIFs
-Place your media in `docs/media/` and reference here:
-- Marketplace grid: `![Marketplace](docs/media/marketplace.png)`
-- Daily summon modal: `![Daily Summon](docs/media/daily-summon.gif)`
-- Admin console: `![Admin](docs/media/admin.png)`
-
 ## Getting Started (local)
 Prereqs: .NET 8 SDK, Node.js 18+, Docker Desktop, Python 3.11+ (for bots).
 
@@ -84,11 +78,10 @@ python -m main        # start bots
 
 ## Project Structure
 - `src/` – .NET services (Gateway, Identity, Auction, Bidding, Search, Notification)
-- `frontend/webapp/` – Next.js marketplace
-- `Hero-Exchange-Admin/` – Angular admin console (separate repo path)
-- `py-bots/` – Python bot service + FastAPI admin API
-- `tests/` – .NET tests (BiddingService, IdentityService)
-- `docs/` – Deployment notes and (add your) media
+- `frontend/webapp/` - Next.js marketplace
+- `Hero-Exchange-Admin/` - Angular admin console (separate repo path)
+- `py-bots/` - Python bot service + FastAPI admin API
+- `tests/` - .NET tests (BiddingService, IdentityService)
 
 ## Testing
 - Frontend: `cd frontend/webapp && npm test`
