@@ -3,7 +3,7 @@
 Dark-fantasy hero marketplace built as a portfolio-grade microservices demo. Collect heroes, run live auctions, get daily mystery pulls, and watch real-time bids roll in. Everything runs on a modern stack (Next.js + .NET microservices + SignalR + RabbitMQ) with working auth and search.
 
 ## Why it’s interesting
-- End-to-end flow: Identity → Gateway → Auctions/Bidding/Search/Notifications → Next.js UI.
+- End-to-end flow: Identity -> Gateway -> Auctions/Bidding/Search/Notifications -> Next.js UI.
 - Real-time UX: SignalR updates for bids/notifications; animated hero cards and daily summon box.
 - Demo-friendly: Seeded users, guest login, bots to keep the marketplace lively.
 
@@ -94,8 +94,8 @@ python -m main        # start bots
 3) Harden Identity seeding/guest flow with rate limits and audit logging.
 
 ## License
-Demo project for portfolio/educational purposes. No warranty.
+Demo project for portfolio/educational purposes.
 
 ## Contact
-- Maintainer: Dion Upton (dionupton@protonmail.com)
+- Maintainer: Rene Upton (reneupton@pm.me)
 - Live app: https://hero-exchange.live
