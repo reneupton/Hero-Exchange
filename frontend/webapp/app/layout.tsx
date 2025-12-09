@@ -6,7 +6,7 @@ import ToasterProvider from './providers/ToasterProvider'
 import SignalRProvider from './providers/SignalRProvider'
 import { getCurrentUser } from './actions/authActions'
 import GamificationBootstrap from './providers/GamificationBootstrap'
-import { Analytics } from '@vercel/analytics/react'
+import { Analytics } from '@vercel/analytics/next'
 
 
 export const metadata: Metadata = {
