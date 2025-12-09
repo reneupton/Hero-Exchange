@@ -55,10 +55,10 @@ export default function BidForm({ auctionId, highBid }: Props) {
       <input
         type="number"
         {...register("amount")}
-        className="input-custom text-sm text-gray-700"
-        placeholder={`Enter your bid (minimum bid is ${numberWithCommas(
+        className="input-custom text-sm text-gray-700 min-w-0 w-full"
+        placeholder={`Enter your bid (min ${numberWithCommas(
           highBid + 1
-        )} Gold)`}
+        )})`}
       />
       <button
         type="submit"

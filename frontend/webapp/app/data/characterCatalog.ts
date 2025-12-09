@@ -29,6 +29,22 @@ const rarityScale: Record<Rarity, number> = {
   Legendary: 1.5,
 };
 
+// Simulated average sale prices: slightly above gold value with variance
+const avgSalePriceMultiplier: Record<Rarity, number> = {
+  Common: 1.08,
+  Rare: 1.12,
+  Epic: 1.18,
+  Legendary: 1.25,
+};
+
+// Simulated sale counts: rarer heroes sell less often
+const baseSaleCounts: Record<Rarity, number> = {
+  Common: 42,
+  Rare: 28,
+  Epic: 15,
+  Legendary: 7,
+};
+
 const rarityOrder: Rarity[] = ['Common', 'Rare', 'Epic', 'Legendary'];
 
 const heroArchetypes: HeroArchetype[] = [
@@ -117,14 +133,17 @@ const heroArchetypes: HeroArchetype[] = [
 export const characterCatalog: CharacterDefinition[] = heroArchetypes.flatMap((hero) =>
   rarityOrder.map((rarity) => {
     const m = rarityScale[rarity];
+    const goldValue = Math.round(hero.baseGold * m);
     return {
       id: `${hero.id}-${rarity.toLowerCase()}`,
       name: hero.name,
       discipline: hero.discipline,
       rarity,
       lore: hero.lore,
-      gold: Math.round(hero.baseGold * m),
+      gold: goldValue,
       cardImage: hero.cardImage,
+      avgSalePrice: Math.round(goldValue * avgSalePriceMultiplier[rarity]),
+      saleCount: baseSaleCounts[rarity],
     };
   })
 );

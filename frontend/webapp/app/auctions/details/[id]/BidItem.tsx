@@ -36,7 +36,7 @@ export default function BidItem({bid} : Props) {
   return (
     <div className={`
         border border-white/60 bg-white/85 px-3 py-2 rounded-xl glass-panel
-        flex justify-between items-center shadow-sm
+        flex justify-between items-center shadow-sm flex-shrink-0 min-h-[60px]
         ${getBidInfo().bgColor}
     `}>
         <div className='flex flex-col gap-0.5'>
