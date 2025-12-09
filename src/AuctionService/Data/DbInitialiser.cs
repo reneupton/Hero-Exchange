@@ -80,7 +80,8 @@ public class DbInitialiser
         };
 
         var sellers = new[] { "alice", "bob", "tom", "nova", "echo", "pixel", "blade", "ember" };
-        var random = new Random(99);
+        // Use a non-seeded RNG so rarity distribution varies each seed run.
+        var random = new Random();
 
         var auctions = new List<Auction>();
 
