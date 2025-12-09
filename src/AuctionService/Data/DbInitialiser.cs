@@ -75,7 +75,7 @@ public class DbInitialiser
             ("Torhild Embercore", "Guardian", 88, 28, 92, 28, "Magma", "Living bulwark of stone and flame.", "/pets/craftpix-891123-free-golems-chibi-2d-game-sprites/golem_1/card/frame_1.png"),
             ("Frostech Ward", "Guardian", 74, 35, 86, 32, "Frost", "Icebound sentinel, anchors the line.", "/pets/craftpix-891123-free-golems-chibi-2d-game-sprites/golem_2/card/frame_2.png"),
             ("Grum Ironhorn", "Berserker", 96, 18, 88, 44, "Bronze", "Stampeding minotaur, unstoppable charge.", "/pets/craftpix-net-534656-free-minotaur-chibi-character-sprites/minotaur_1/card/frame_1.png"),
-            ("Astrael Fallen", "Reaper", 76, 74, 72, 66, "Celestial", "Winged revenant with twilight scythe.", "/pets/craftpix-991117-free-fallen-angel-chibi-2d-game-sprites/fallen_angel_1/card/frame_0.png"),
+            ("Astrael Fallen", "Reaper", 76, 74, 72, 66, "Celestial", "Winged revenant with twilight scythe.", "/pets/craftpix-991117-free-fallen-angel-chibi-2d-game-sprites/fallen_angels_1/card/frame_0.png"),
             ("Dresh Wildarrow", "Ranger", 58, 24, 52, 68, "Verdant", "Quickdraw hunter of the wild clans.", "/pets/craftpix-064112-free-orc-ogre-and-goblin-chibi-2d-game-sprites/orc/card/frame_0.png")
         };
 

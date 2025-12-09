@@ -109,7 +109,7 @@ HERO_ARCHETYPES = [
         "colorway": "Celestial",
         "releaseYear": 2025,
         "specs": "Winged revenant with twilight scythe.",
-        "imageUrl": "/pets/craftpix-991117-free-fallen-angel-chibi-2d-game-sprites/fallen_angel_1/card/frame_0.png",
+        "imageUrl": "/pets/craftpix-991117-free-fallen-angel-chibi-2d-game-sprites/fallen_angels_1/card/frame_0.png",
     },
     {
         "id": "dresh",

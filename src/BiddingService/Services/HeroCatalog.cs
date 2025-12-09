@@ -17,7 +17,7 @@ public static class HeroCatalog
         ["torhild"] = new HeroBase("torhild", "Torhild Embercore", "Guardian", 88, 28, 92, 28, "/pets/craftpix-891123-free-golems-chibi-2d-game-sprites/golem_1/card/frame_1.png"),
         ["frostech"] = new HeroBase("frostech", "Frostech Ward", "Guardian", 74, 35, 86, 32, "/pets/craftpix-891123-free-golems-chibi-2d-game-sprites/golem_2/card/frame_2.png"),
         ["grum"] = new HeroBase("grum", "Grum Ironhorn", "Berserker", 96, 18, 88, 44, "/pets/craftpix-net-534656-free-minotaur-chibi-character-sprites/minotaur_1/card/frame_1.png"),
-        ["astrael"] = new HeroBase("astrael", "Astrael Fallen", "Reaper", 76, 74, 72, 66, "/pets/craftpix-991117-free-fallen-angel-chibi-2d-game-sprites/fallen_angel_1/card/frame_0.png"),
+        ["astrael"] = new HeroBase("astrael", "Astrael Fallen", "Reaper", 76, 74, 72, 66, "/pets/craftpix-991117-free-fallen-angel-chibi-2d-game-sprites/fallen_angels_1/card/frame_0.png"),
         ["dresh"] = new HeroBase("dresh", "Dresh Wildarrow", "Ranger", 58, 24, 52, 68, "/pets/craftpix-064112-free-orc-ogre-and-goblin-chibi-2d-game-sprites/orc/card/frame_0.png"),
     };
 
