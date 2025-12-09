@@ -5,7 +5,6 @@ import Image from 'next/image';
 import { FaTimes } from 'react-icons/fa';
 import { CharacterDefinition } from '../data/characterCatalog';
 import goldIcon from '@/public/gold2.png';
-import DateInput from './DateInput';
 import { useForm, Controller } from 'react-hook-form';
 import { createAuction } from '../actions/auctionActions';
 import { getMyProgress } from '../actions/gamificationActions';
@@ -20,9 +19,21 @@ type Props = {
   preselectedHero?: CharacterDefinition | null;
 };
 
+type DurationOption = {
+  label: string;
+  hours: number;
+};
+
+const DURATION_OPTIONS: DurationOption[] = [
+  { label: '12 Hours', hours: 12 },
+  { label: '24 Hours', hours: 24 },
+  { label: '3 Days', hours: 72 },
+  { label: '7 Days', hours: 168 },
+];
+
 type FormValues = {
   reservePrice: number;
-  auctionEnd: Date;
+  durationHours: number;
 };
 
 export default function SellHeroModal({ isOpen, onClose, ownedHeroes, preselectedHero }: Props) {
@@ -35,13 +46,18 @@ export default function SellHeroModal({ isOpen, onClose, ownedHeroes, preselecte
     control,
     handleSubmit,
     reset,
-    formState: { isSubmitting, isValid },
+    watch,
+    setValue,
+    formState: { isSubmitting },
   } = useForm<FormValues>({
     mode: 'onTouched',
     defaultValues: {
       reservePrice: 0,
+      durationHours: 24, // Default to 24 hours
     },
   });
+
+  const selectedDuration = watch('durationHours');
 
   const handleSelectHero = (hero: CharacterDefinition) => {
     setSelectedHero(hero);
@@ -64,6 +80,10 @@ export default function SellHeroModal({ isOpen, onClose, ownedHeroes, preselecte
     if (!selectedHero) return;
 
     try {
+      // Calculate auction end date from duration
+      const auctionEnd = new Date();
+      auctionEnd.setHours(auctionEnd.getHours() + data.durationHours);
+
       const payload = {
         title: selectedHero.name,
         brand: selectedHero.discipline,
@@ -74,7 +94,7 @@ export default function SellHeroModal({ isOpen, onClose, ownedHeroes, preselecte
         specs: selectedHero.lore ?? '',
         imageUrl: selectedHero.cardImage,
         reservePrice: data.reservePrice || 0,
-        auctionEnd: data.auctionEnd,
+        auctionEnd: auctionEnd,
       };
 
       const res = await createAuction(payload);
@@ -215,17 +235,27 @@ export default function SellHeroModal({ isOpen, onClose, ownedHeroes, preselecte
                 <p className="text-xs text-[var(--muted)] mt-1">Enter 0 for no minimum bid requirement</p>
               </div>
 
-              {/* Auction End Date */}
+              {/* Auction Duration */}
               <div>
-                <DateInput
-                  label="Auction End Date"
-                  name="auctionEnd"
-                  control={control}
-                  dateFormat="dd MMM yyyy h:mm a"
-                  showTimeSelect
-                  rules={{ required: 'End date is required' }}
-                  minDate={new Date()}
-                />
+                <label className="block text-sm font-medium text-[var(--text)] mb-2">
+                  Auction Duration
+                </label>
+                <div className="grid grid-cols-2 gap-2">
+                  {DURATION_OPTIONS.map((option) => (
+                    <button
+                      key={option.hours}
+                      type="button"
+                      onClick={() => setValue('durationHours', option.hours)}
+                      className={`py-3 px-4 rounded-xl border text-sm font-medium transition-all ${
+                        selectedDuration === option.hours
+                          ? 'border-[var(--accent)] bg-[rgba(139,92,246,0.2)] text-[var(--accent)]'
+                          : 'border-[var(--card-border)] bg-[rgba(26,32,48,0.65)] text-[var(--text)] hover:border-[var(--accent)] hover:bg-[rgba(139,92,246,0.1)]'
+                      }`}
+                    >
+                      {option.label}
+                    </button>
+                  ))}
+                </div>
               </div>
 
               {/* Actions */}
@@ -241,7 +271,7 @@ export default function SellHeroModal({ isOpen, onClose, ownedHeroes, preselecte
                 )}
                 <button
                   type="submit"
-                  disabled={isSubmitting || !isValid}
+                  disabled={isSubmitting}
                   className="flex-1 soft-button py-3 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isSubmitting ? 'Listing...' : 'List Hero'}

@@ -1,6 +1,5 @@
 'use client'
 
-import { Button } from 'flowbite-react'
 import Link from 'next/link'
 import React from 'react'
 
@@ -10,8 +9,11 @@ type Props={
 
 export default function EditButton({id} : Props) {
   return (
-    <Button outline>
-        <Link href={`/auctions/update/${id}`}>Update Auction</Link>
-    </Button>
+    <Link
+        href={`/auctions/update/${id}`}
+        className="soft-button-ghost px-4 py-2 rounded-xl text-sm font-medium"
+    >
+        Update Auction
+    </Link>
   )
 }

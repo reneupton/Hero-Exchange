@@ -2,7 +2,6 @@
 
 import {useEffect} from "react";
 import {Auction} from "@/types";
-import {Table} from "flowbite-react";
 import { useRouter } from "next/navigation";
 import { formatGold } from "@/app/lib/numberWithComma";
 import { CharacterDefinition } from "@/app/data/characterCatalog";
@@ -13,6 +12,13 @@ type Props = {
     auction: Auction;
     character?: CharacterDefinition;
 }
+
+type SpecRow = {
+    label: string;
+    value: React.ReactNode;
+    icon?: React.ReactNode;
+};
+
 export default function DetailedSpecs({auction, character}: Props) {
     const router = useRouter();
     useEffect(() => {
@@ -21,79 +27,48 @@ export default function DetailedSpecs({auction, character}: Props) {
         }
     }, [auction, router]);
     if (!auction || !auction.id) return null;
-    
+
+    const rows: SpecRow[] = [
+        { label: 'Seller', value: auction.seller },
+        { label: 'Discipline', value: character?.discipline ?? auction.category },
+        { label: 'Rarity', value: character?.rarity ?? 'Unknown' },
+        {
+            label: 'Value',
+            value: formatGold(auction.currentHighBid ?? 0),
+            icon: <Image src={goldIcon} alt="gold" width={16} height={16} className="object-contain" />
+        },
+        {
+            label: 'Reserve',
+            value: auction.reservePrice > 0 ? formatGold(auction.reservePrice) : 'No reserve'
+        },
+        { label: 'Lore', value: auction.specs },
+    ];
+
+    if (character) {
+        rows.push({
+            label: 'Avg Sale',
+            value: character.avgSalePrice !== undefined && character.avgSalePrice > 0
+                ? `${character.avgSalePrice.toLocaleString()} gold`
+                : <span className="italic text-[var(--muted)]">No sales data</span>
+        });
+    }
+
     return (
-        <div className="glass-panel rounded-2xl overflow-hidden border border-white/70">
-            <Table striped={false} className="text-slate-700">
-                <Table.Body className="divide-y divide-white/60">
-                    <Table.Row className="bg-transparent">
-                        <Table.Cell className="whitespace-nowrap font-semibold text-slate-900">
-                            Seller
-                        </Table.Cell>
-                        <Table.Cell>
-                            {auction.seller}
-                        </Table.Cell>
-                    </Table.Row>
-                    <Table.Row className="bg-transparent">
-                        <Table.Cell className="whitespace-nowrap font-semibold text-slate-900">
-                            Discipline
-                        </Table.Cell>
-                        <Table.Cell>
-                            {character?.discipline ?? auction.category}
-                        </Table.Cell>
-                    </Table.Row>
-                    <Table.Row className="bg-transparent">
-                        <Table.Cell className="whitespace-nowrap font-semibold text-slate-900">
-                            Rarity
-                        </Table.Cell>
-                        <Table.Cell>
-                            {character?.rarity ?? 'Unknown'}
-                        </Table.Cell>
-                    </Table.Row>
-                    <Table.Row className="bg-transparent">
-                        <Table.Cell className="whitespace-nowrap font-semibold text-slate-900">
-                            <div className="flex items-center gap-2">
-                                <Image src={goldIcon} alt="gold" width={16} height={16} className="object-contain" />
-                                Value
-                            </div>
-                        </Table.Cell>
-                        <Table.Cell className="flex items-center gap-2">
-                            <Image src={goldIcon} alt="gold" width={16} height={16} className="object-contain" />
-                            {formatGold(auction.currentHighBid ?? 0)}
-                        </Table.Cell>
-                    </Table.Row>
-                    <Table.Row className="bg-transparent">
-                        <Table.Cell className="whitespace-nowrap font-semibold text-slate-900">
-                            Reserve
-                        </Table.Cell>
-                        <Table.Cell>
-                            {auction.reservePrice > 0 ? formatGold(auction.reservePrice) : 'No reserve'}
-                        </Table.Cell>
-                    </Table.Row>
-                    <Table.Row className="bg-transparent">
-                        <Table.Cell className="whitespace-nowrap font-semibold text-slate-900">
-                            Specs
-                        </Table.Cell>
-                        <Table.Cell>
-                            {auction.specs}
-                        </Table.Cell>
-                    </Table.Row>
-                    {character && (
-                      <Table.Row className="bg-transparent">
-                        <Table.Cell className="whitespace-nowrap font-semibold text-slate-900">
-                          Avg Sale Price
-                        </Table.Cell>
-                        <Table.Cell className="text-sm text-slate-800">
-                          {character.avgSalePrice !== undefined && character.avgSalePrice > 0 ? (
-                            <span>{character.avgSalePrice.toLocaleString()} gold</span>
-                          ) : (
-                            <span className="italic text-slate-500">No sales data</span>
-                          )}
-                        </Table.Cell>
-                      </Table.Row>
-                    )}
-                </Table.Body>
-            </Table>
+        <div className="glass-panel rounded-2xl overflow-hidden border border-[var(--card-border)]">
+            <div className="divide-y divide-[var(--card-border)]">
+                {rows.map((row, idx) => (
+                    <div key={idx} className="flex items-center px-4 py-3">
+                        <div className="w-28 flex-shrink-0 font-semibold text-[var(--text)] flex items-center gap-2">
+                            {row.icon}
+                            {row.label}
+                        </div>
+                        <div className="flex-1 text-[var(--muted)] flex items-center gap-2">
+                            {row.icon && <Image src={goldIcon} alt="gold" width={16} height={16} className="object-contain" />}
+                            {row.value}
+                        </div>
+                    </div>
+                ))}
+            </div>
         </div>
     )
 }
