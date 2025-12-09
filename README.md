@@ -88,6 +88,12 @@ python -m main        # start bots
 - Backend (.NET): `dotnet test HeroExchange.sln` (or per project, e.g., `dotnet test tests/BiddingService.Tests/BiddingService.Tests.csproj`, `tests/IdentityService.Tests`)
 - Bots: `cd py-bots && python -m pytest`
 
+## Cost-saving measures for the demo
+- Visitor-aware bots: bots auto-start when visitors are detected and stop after idle time, cutting 24/7 compute usage during quiet periods.
+- Lean Mongo pools: aggressive pooling and idle timeouts allow Railway serverless instances to sleep and reduce connection overhead.
+- Data TTLs: bids expire after 30 days and finished auctions after 7 days, keeping storage footprint small and index rebuilds faster.
+- Private networking only: services use internal Railway hosts to avoid public egress.
+
 ## Future Improvements
 1) Add integration tests for Gateway routing/Notification SignalR with WebApplicationFactory.
 2) Expand admin console e2e tests (Playwright/Cypress) and secure it behind proper auth.
