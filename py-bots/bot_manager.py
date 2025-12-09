@@ -1,4 +1,5 @@
 import asyncio
+import logging
 import time
 from typing import List, Optional
 
@@ -17,6 +18,12 @@ class BotManager:
         self.running = False
         self._activity: List[dict] = []
         self._activity_limit: int = 200
+        # Visitor-aware mode
+        self._visitor_aware = True
+        self._idle_timeout_sec = 300  # Stop bots after 5 minutes of no visitors
+        self._poll_interval_sec = 30  # Check presence every 30 seconds
+        self._last_visitor_time: float = 0
+        self._presence_task: Optional[asyncio.Task] = None
 
     def _log_activity(self, bot: str, event: str, data: dict):
         entry = {"ts": time.time(), "bot": bot, "event": event, "data": data}
@@ -27,7 +34,48 @@ class BotManager:
     def get_activity(self) -> List[dict]:
         return list(reversed(self._activity))
 
-    async def start(self):
+    async def _check_presence(self) -> int:
+        """Check the presence endpoint for active visitor count."""
+        try:
+            # Use the gateway URL to access the presence endpoint
+            presence_url = str(self.settings.api_base).rstrip("/") + "/presence"
+            async with httpx.AsyncClient(timeout=5) as client:
+                resp = await client.get(presence_url)
+                if resp.status_code == 200:
+                    data = resp.json()
+                    return data.get("connections", 0)
+        except Exception as e:
+            logging.warning(f"Failed to check presence: {e}")
+        return 0
+
+    async def _presence_loop(self):
+        """Background task that monitors visitor presence and starts/stops bots accordingly."""
+        logging.info("Visitor-aware mode enabled - monitoring presence")
+        while True:
+            try:
+                connections = await self._check_presence()
+
+                if connections > 0:
+                    self._last_visitor_time = time.time()
+                    if not self.running:
+                        logging.info(f"Visitors detected ({connections}), starting bots")
+                        self._log_activity("system", "visitors_detected", {"connections": connections})
+                        await self._start_bots()
+                else:
+                    # Check if we've been idle too long
+                    if self.running and self._last_visitor_time > 0:
+                        idle_time = time.time() - self._last_visitor_time
+                        if idle_time > self._idle_timeout_sec:
+                            logging.info(f"No visitors for {idle_time:.0f}s, stopping bots")
+                            self._log_activity("system", "idle_timeout", {"idle_seconds": idle_time})
+                            await self._stop_bots()
+            except Exception as e:
+                logging.error(f"Error in presence loop: {e}")
+
+            await asyncio.sleep(self._poll_interval_sec)
+
+    async def _start_bots(self):
+        """Start bot loops without affecting presence monitoring."""
         if self.running:
             return
         self.running = True
@@ -49,7 +97,8 @@ class BotManager:
 
         self.tasks = [asyncio.create_task(loop_bot(b)) for b in self.bots]
 
-    async def stop(self):
+    async def _stop_bots(self):
+        """Stop bot loops without affecting presence monitoring."""
         self.running = False
         for t in self.tasks:
             t.cancel()
@@ -59,7 +108,32 @@ class BotManager:
             await self.client.aclose()
             self.client = None
 
+    async def start(self):
+        """Start the bot manager. In visitor-aware mode, starts presence monitoring instead of bots directly."""
+        if self._visitor_aware:
+            if self._presence_task is None:
+                self._presence_task = asyncio.create_task(self._presence_loop())
+                self._log_activity("system", "presence_monitor_started", {})
+        else:
+            await self._start_bots()
+
+    async def stop(self):
+        """Stop all bots and presence monitoring."""
+        if self._presence_task:
+            self._presence_task.cancel()
+            self._presence_task = None
+        await self._stop_bots()
+
     async def apply_config(self, updates: dict):
+        # Handle visitor-aware settings
+        if "visitor_aware" in updates:
+            self._visitor_aware = bool(updates.pop("visitor_aware"))
+        if "idle_timeout_sec" in updates:
+            self._idle_timeout_sec = int(updates.pop("idle_timeout_sec"))
+        if "poll_interval_sec" in updates:
+            self._poll_interval_sec = int(updates.pop("poll_interval_sec"))
+
+        # Restart with new config
         await self.stop()
         for key, value in updates.items():
             if hasattr(self.settings, key):
@@ -80,6 +154,10 @@ class BotManager:
             "max_active_auctions_per_bot": self.settings.max_active_auctions_per_bot,
             "min_balance": self.settings.min_balance,
             "auto_topup": self.settings.auto_topup,
+            # Visitor-aware settings
+            "visitor_aware": self._visitor_aware,
+            "idle_timeout_sec": self._idle_timeout_sec,
+            "poll_interval_sec": self._poll_interval_sec,
         }
 
     def status(self):

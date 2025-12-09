@@ -65,10 +65,27 @@ app.UseAuthorization();
 app.MapControllers();
 
 await Policy.Handle<TimeoutException>()
-        .WaitAndRetryAsync(5, retryAttempt => TimeSpan.FromSeconds(10)) 
+        .WaitAndRetryAsync(5, retryAttempt => TimeSpan.FromSeconds(10))
         .ExecuteAndCaptureAsync(async () => {
             await DB.InitAsync("BidDb", MongoClientSettings.FromConnectionString(builder.Configuration.GetConnectionString("BidDbConnection")));
         });
+
+// TTL index: auto-delete bids older than 30 days
+// Drop existing index if it exists (may have different options)
+try
+{
+    await DB.Collection<BiddingService.Models.Bid>().Indexes.DropOneAsync("BidTime_TTL");
+}
+catch { /* Index doesn't exist, ignore */ }
+
+await DB.Index<BiddingService.Models.Bid>()
+    .Key(x => x.BidTime, KeyType.Ascending)
+    .Option(o =>
+    {
+        o.Name = "BidTime_TTL";
+        o.ExpireAfter = TimeSpan.FromDays(30);
+    })
+    .CreateAsync();
 
 await SeedProgressData.SeedAsync();
 

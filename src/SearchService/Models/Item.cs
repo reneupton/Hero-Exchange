@@ -23,4 +23,9 @@ public class Item : Entity
     public int? ReleaseYear { get; set; }
     public string Specs { get; set; }
     public string ImageUrl { get; set; }
+    /// <summary>
+    /// Timestamp when the auction was closed (Finished/ReserveNotMet).
+    /// Used for TTL index - documents auto-delete 7 days after this date.
+    /// </summary>
+    public DateTime? ClosedAt { get; set; }
 }

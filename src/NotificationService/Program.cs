@@ -47,6 +47,9 @@ var app = builder.Build();
 app.UseCors("CorsPolicy");
 app.MapHub<NotificationHub>("/notifications");
 
+// Presence endpoint for bot service to check active visitors
+app.MapGet("/presence", () => new { connections = NotificationHub.ConnectionCount });
+
 app.Run();
 
 // For integration testing
