@@ -142,8 +142,8 @@ export default function AuctionForm({ auction }: Props) {
         });
         id = res.id;
         try {
-          const profile = await getMyProgress();
-          if (profile) setProfile(profile);
+          const result = await getMyProgress();
+          if (result.profile) setProfile(result.profile);
         } catch (_) {}
       } else {
         if (auction) {

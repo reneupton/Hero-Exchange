@@ -91,8 +91,8 @@ export default function SignalRProvider({ children, user }: Props) {
             addBid(bid);
             if (user?.username === bid.bidder) {
               getMyProgress()
-                .then((profile) => {
-                  if (profile) setProfile(profile);
+                .then((result) => {
+                  if (result.profile) setProfile(result.profile);
                   return getLeaderboard();
                 })
                 .then(setLeaderboard)
@@ -123,8 +123,8 @@ export default function SignalRProvider({ children, user }: Props) {
           connection.on("AuctionFinished", (finishedAuction: AuctionFinished) => {
             if (user && (finishedAuction.winner === user.username || finishedAuction.seller === user.username)) {
               getMyProgress()
-                .then((profile) => {
-                  if (profile) setProfile(profile);
+                .then((result) => {
+                  if (result.profile) setProfile(result.profile);
                   return getLeaderboard();
                 })
                 .then(setLeaderboard)
@@ -163,10 +163,10 @@ export default function SignalRProvider({ children, user }: Props) {
                 profileRef.current = updated;
                 setProfile(updated);
               }
-              const profile = await getMyProgress();
-              if (profile) {
-                profileRef.current = profile;
-                setProfile(profile);
+              const result = await getMyProgress();
+              if (result.profile) {
+                profileRef.current = result.profile;
+                setProfile(result.profile);
               }
               const leaderboard = await getLeaderboard();
               if (leaderboard) setLeaderboard(leaderboard);
@@ -188,10 +188,10 @@ export default function SignalRProvider({ children, user }: Props) {
                 profileRef.current = updated;
                 setProfile(updated);
               }
-              const profile = await getMyProgress();
-              if (profile) {
-                profileRef.current = profile;
-                setProfile(profile);
+              const result = await getMyProgress();
+              if (result.profile) {
+                profileRef.current = result.profile;
+                setProfile(result.profile);
               }
               playChime();
               toast.custom(<AdminActionToast type="avatar" payload={payload as any} />, {
@@ -245,10 +245,10 @@ export default function SignalRProvider({ children, user }: Props) {
                 profileRef.current = updated;
                 setProfile(updated);
               }
-              const profile = await getMyProgress();
-              if (profile) {
-                profileRef.current = profile;
-                setProfile(profile);
+              const result = await getMyProgress();
+              if (result.profile) {
+                profileRef.current = result.profile;
+                setProfile(result.profile);
               }
               playChime();
               toast.custom(<AdminActionToast type="cooldown" payload={{ username: payload.username }} />, {

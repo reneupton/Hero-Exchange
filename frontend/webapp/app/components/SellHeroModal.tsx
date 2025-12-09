@@ -84,8 +84,8 @@ export default function SellHeroModal({ isOpen, onClose, ownedHeroes, preselecte
       }
 
       try {
-        const profile = await getMyProgress();
-        if (profile) setProfile(profile);
+        const result = await getMyProgress();
+        if (result.profile) setProfile(result.profile);
       } catch {}
 
       toast.success(`${selectedHero.name} listed for auction!`);

@@ -282,9 +282,9 @@ export default function Listings({ user }: Props) {
   const refreshProfileAndBoard = useCallback(async (): Promise<void> => {
     if (!user) return;
     try {
-      const profile = await getMyProgress();
-      if (profile) {
-        setProfile(profile);
+      const result = await getMyProgress();
+      if (result.profile) {
+        setProfile(result.profile);
       }
       const leaderboard = await getLeaderboard();
       if (leaderboard && leaderboard.length > 0) {

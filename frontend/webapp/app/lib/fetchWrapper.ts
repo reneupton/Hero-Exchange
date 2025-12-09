@@ -58,7 +58,7 @@ async function getHeaders(){
 
 async function handleResponse(response: Response) {
     const text = await response.text();
-    
+
     let data;
     try {
         data = JSON.parse(text)
@@ -71,7 +71,8 @@ async function handleResponse(response: Response) {
     } else {
         const error = {
             status : response.status,
-            message : typeof data === 'string' && data.length > 0 ? data : response.statusText
+            message : typeof data === 'string' && data.length > 0 ? data : response.statusText,
+            isUnauthorized: response.status === 401
         }
 
         return {error};

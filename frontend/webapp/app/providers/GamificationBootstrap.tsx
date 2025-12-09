@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { User } from "next-auth";
+import { signOut } from "next-auth/react";
 import toast from "react-hot-toast";
 import { usePathname } from "next/navigation";
 import { getLeaderboard, getMyProgress, awardGamification } from "../actions/gamificationActions";
@@ -28,8 +29,16 @@ export default function GamificationBootstrap({ user, children }: Props) {
       }
 
       try {
-        const profile = await getMyProgress();
-        if (!ignore && profile) setProfile(profile);
+        const result = await getMyProgress();
+
+        // Handle stale session - token is invalid, sign user out
+        if (result.isUnauthorized) {
+          toast.error("Session expired. Please log in again.");
+          signOut({ callbackUrl: "/" });
+          return;
+        }
+
+        if (!ignore && result.profile) setProfile(result.profile);
 
         const daily = await awardGamification("daily-login");
         if (!ignore && daily) setProfile(daily);

@@ -11,16 +11,23 @@ export type SummonResult = {
   rarity: string;
 };
 
+export type ProgressResult = {
+  profile: PlayerProfile | null;
+  isUnauthorized?: boolean;
+};
+
 /**
  * Fetches the current user's progress profile.
  */
-export async function getMyProgress(): Promise<PlayerProfile | null> {
+export async function getMyProgress(): Promise<ProgressResult> {
   try {
     const res = await fetchWrapper.get("progress/me");
-    if ((res as any)?.error) return null;
-    return res as PlayerProfile;
+    if ((res as any)?.error) {
+      return { profile: null, isUnauthorized: (res as any).error.isUnauthorized };
+    }
+    return { profile: res as PlayerProfile };
   } catch {
-    return null;
+    return { profile: null };
   }
 }
 
