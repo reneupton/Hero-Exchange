@@ -5,6 +5,7 @@ from typing import List, Optional
 
 class Settings(BaseSettings):
     """Environment-driven settings for bot behavior and service endpoints."""
+    # Production URLs as defaults - bots run in Railway alongside services
     api_base: AnyHttpUrl = "https://gateway-service-production-a4ca.up.railway.app/"
     identity_url: Optional[AnyHttpUrl] = "https://identity-service-production-115a.up.railway.app/"
 
