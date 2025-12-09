@@ -14,7 +14,7 @@ export default function BidItem({bid} : Props) {
 
         switch(bid.bidStatus) {
             case 'Accepted':
-                bgColor = 'bg-emerald-100 text-emerald-800'
+                bgColor = 'bg-violet-100 text-violet-800'
                 text = 'Bid accepted'
                 break;
             case 'AcceptedBelowReserve':
