@@ -21,9 +21,12 @@ class BotManager:
         # Visitor-aware mode
         self._visitor_aware = True
         self._idle_timeout_sec = 300  # Stop bots after 5 minutes of no visitors
-        self._poll_interval_sec = 30  # Check presence every 30 seconds
+        self._poll_interval_sec = 90  # Check presence every 90 seconds (reduced from 30s)
         self._last_visitor_time: float = 0
         self._presence_task: Optional[asyncio.Task] = None
+        # Anti-thrash: limit bot starts to max 4 per hour
+        self._max_starts_per_hour = 4
+        self._start_times: List[float] = []
 
     def _log_activity(self, bot: str, event: str, data: dict):
         entry = {"ts": time.time(), "bot": bot, "event": event, "data": data}
@@ -58,9 +61,18 @@ class BotManager:
                 if connections > 0:
                     self._last_visitor_time = time.time()
                     if not self.running:
-                        logging.info(f"Visitors detected ({connections}), starting bots")
-                        self._log_activity("system", "visitors_detected", {"connections": connections})
-                        await self._start_bots()
+                        # Check hourly start cap to avoid thrashing
+                        now = time.time()
+                        hour_ago = now - 3600
+                        self._start_times = [t for t in self._start_times if t > hour_ago]
+                        if len(self._start_times) >= self._max_starts_per_hour:
+                            logging.warning(f"Start cap reached ({self._max_starts_per_hour}/hr), waiting")
+                            self._log_activity("system", "start_cap_reached", {"starts_this_hour": len(self._start_times)})
+                        else:
+                            logging.info(f"Visitors detected ({connections}), starting bots")
+                            self._log_activity("system", "visitors_detected", {"connections": connections})
+                            self._start_times.append(now)
+                            await self._start_bots()
                 else:
                     # Check if we've been idle too long
                     if self.running and self._last_visitor_time > 0:
@@ -132,6 +144,8 @@ class BotManager:
             self._idle_timeout_sec = int(updates.pop("idle_timeout_sec"))
         if "poll_interval_sec" in updates:
             self._poll_interval_sec = int(updates.pop("poll_interval_sec"))
+        if "max_starts_per_hour" in updates:
+            self._max_starts_per_hour = int(updates.pop("max_starts_per_hour"))
 
         # Restart with new config
         await self.stop()
@@ -158,6 +172,7 @@ class BotManager:
             "visitor_aware": self._visitor_aware,
             "idle_timeout_sec": self._idle_timeout_sec,
             "poll_interval_sec": self._poll_interval_sec,
+            "max_starts_per_hour": self._max_starts_per_hour,
         }
 
     def status(self):
