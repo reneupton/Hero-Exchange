@@ -56,6 +56,8 @@ builder.Services.AddAuthorization(options =>
     options.AddPolicy("proxy-auth", policy => policy.RequireAuthenticatedUser());
 });
 
+builder.Services.AddHealthChecks();
+
 IdentityModelEventSource.ShowPII = true;
 
 
@@ -87,6 +89,7 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapReverseProxy();
+app.MapHealthChecks("/health");
 
 app.Run();
 

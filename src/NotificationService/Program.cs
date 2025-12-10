@@ -30,6 +30,7 @@ builder.Services.AddMassTransit(x =>
 });
 
 builder.Services.AddSignalR();
+builder.Services.AddHealthChecks();
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("CorsPolicy", b =>
@@ -49,6 +50,8 @@ app.MapHub<NotificationHub>("/notifications");
 
 // Presence endpoint for bot service to check active visitors
 app.MapGet("/presence", () => new { connections = NotificationHub.ConnectionCount });
+
+app.MapHealthChecks("/health");
 
 app.Run();
 

@@ -49,6 +49,7 @@ internal static class HostingExtensions
         });
         
         builder.Services.AddAuthentication();
+        builder.Services.AddHealthChecks();
 
         builder.Services.AddCors(options =>
         {
@@ -89,6 +90,8 @@ internal static class HostingExtensions
             .RequireAuthorization();
 
         app.UseCors("CorsPolicy");
+
+        app.MapHealthChecks("/health");
 
         return app;
     }

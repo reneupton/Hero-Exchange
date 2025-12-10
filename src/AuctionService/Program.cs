@@ -57,7 +57,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 });
 
 builder.Services.AddGrpc();
-
+builder.Services.AddHealthChecks();
 
 var app = builder.Build();
 
@@ -73,6 +73,7 @@ app.UseAuthorization();
 
 app.MapControllers();
 app.MapGrpcService<GrpcAuctionService>();
+app.MapHealthChecks("/health");
 
 app.Run();
 

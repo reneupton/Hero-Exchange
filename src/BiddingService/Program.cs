@@ -57,6 +57,8 @@ builder.Services.AddHttpClient<GamificationClient>(client =>
     client.Timeout = TimeSpan.FromSeconds(30);
 });
 
+builder.Services.AddHealthChecks();
+
 var app = builder.Build();
 
 app.UseAuthentication();
@@ -97,5 +99,7 @@ await DB.Index<BiddingService.Models.Bid>()
     .CreateAsync();
 
 await SeedProgressData.SeedAsync();
+
+app.MapHealthChecks("/health");
 
 app.Run();
