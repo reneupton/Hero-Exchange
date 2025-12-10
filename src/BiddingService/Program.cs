@@ -100,6 +100,6 @@ await DB.Index<BiddingService.Models.Bid>()
 
 await SeedProgressData.SeedAsync();
 
-app.MapHealthChecks("/health");
+app.MapHealthChecks("/health").AllowAnonymous();
 
 app.Run();

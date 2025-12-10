@@ -73,7 +73,7 @@ app.UseAuthorization();
 
 app.MapControllers();
 app.MapGrpcService<GrpcAuctionService>();
-app.MapHealthChecks("/health");
+app.MapHealthChecks("/health").AllowAnonymous();
 
 app.Run();
 

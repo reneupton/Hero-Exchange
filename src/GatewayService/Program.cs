@@ -89,7 +89,7 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapReverseProxy();
-app.MapHealthChecks("/health");
+app.MapHealthChecks("/health").AllowAnonymous();
 
 app.Run();
 

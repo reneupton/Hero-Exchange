@@ -57,7 +57,7 @@ var app = builder.Build();
 app.UseAuthorization();
 
 app.MapControllers();
-app.MapHealthChecks("/health");
+app.MapHealthChecks("/health").AllowAnonymous();
 
 app.Lifetime.ApplicationStarted.Register(async () =>
 {

@@ -51,7 +51,7 @@ app.MapHub<NotificationHub>("/notifications");
 // Presence endpoint for bot service to check active visitors
 app.MapGet("/presence", () => new { connections = NotificationHub.ConnectionCount });
 
-app.MapHealthChecks("/health");
+app.MapHealthChecks("/health").AllowAnonymous();
 
 app.Run();
 
