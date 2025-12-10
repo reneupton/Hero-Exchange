@@ -12,6 +12,11 @@ import { Analytics } from '@vercel/analytics/next'
 export const metadata: Metadata = {
   title: 'Hero Exchange',
   description: 'RPG hero marketplace for rare adventurers, powered by gold.',
+  icons: {
+    icon: '/icon.png',
+    shortcut: '/icon.png',
+    apple: '/icon.png',
+  },
 }
 
 export default async function RootLayout({
